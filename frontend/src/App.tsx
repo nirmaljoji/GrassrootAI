@@ -1,10 +1,9 @@
-import React from "react";
-import { Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
 import { useState, useEffect } from "react";
 import "./App.css";
 import { fetchMessage } from "./lib/api";
+import { Route, Routes } from "react-router";
 
 const App = () => {
   const [message, setMessage] = useState<string>("");
