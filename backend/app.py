@@ -314,12 +314,32 @@ def agent():
                     schedule_lines = [(ln.strip())[1:].strip() for ln in raw_content.split('\\n')]
 
                     schedule_collection = client['sanctuary']['schedule']
-                    for schedule_item in schedule_lines:
+                    for _schedule_item in schedule_lines:
+                        _schedule_title, _schedule_desc = _schedule_item.split(":")
+                        _schedule_title = _schedule_title.strip()
+                        _schedule_desc = _schedule_desc.strip()
                         schedule_collection.insert_one({
                             'event_id': event_id,
-                            'schedule_item': schedule_item
+                            'title': schedule_item,
+                            'description': _schedule_desc
                         })
-                        
+            
+            if "'Permits'" in response_str:
+                match = re.search(r"content='(.+?)'", response_str, re.DOTALL)
+                if match:
+                    raw_content = match.group(1)
+                    permit_inter = [(ln.strip())[1:].strip() for ln in raw_content.split('\\n')]
+                    
+                    permit_collection = client['sanctuary']['permit']
+                    for _permit in permit_inter:
+                        __permit, _desc = _permit.split(":")
+                        __permit = __permit.strip()
+                        _desc = _desc.strip()
+                        permit_collection.insert_one({
+                            'event_id': event_id,
+                            'title': __permit,
+                            "description": _desc
+                        })
 
             yield response_str + "\n----\n"
         
@@ -345,6 +365,11 @@ def agent():
         if schedule_lines:
             yield "\n*Schedule*:\n"
             for line in schedule_lines:
+                yield f"{line}\n"
+        
+        if permit_inter:
+            yield "\n*Permit*:\n"
+            for line in permit_inter:
                 yield f"{line}\n"
 
     return Response(generate(), content_type="text/plain")
