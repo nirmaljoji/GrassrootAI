@@ -20,10 +20,9 @@ resourse_search_tool = SearchTool()
 outreach_social_tool = OutreachSocialTool()
 schedule_tool = ScheduleTool()
 
-members = ["Resources", "Social_Outreach", "Volunteer_Outreach", "Schedule"]
+members = ["Resources", "Social_Outreach", "Volunteer_Outreach", "Schedule", "Permits"]
 options = members + ["FINISH"]
 
-members = ["Resources", "Social_Outreach", "Volunteer_Outreach", "Permits"]
 # Our team supervisor is an LLM node. It just picks the next agent to process
 # and decides when the work is completed
 resource_prompt = """You are a resource planning expert for social initiatives. 
