@@ -16,6 +16,11 @@ load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
+
+# Increase request timeout
+app.config['PERMANENT_SESSION_LIFETIME'] = 300  # 5 minutes
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max-limit
+
 openai.api_key = os.getenv("OPENAI_API_KEY")
 MONGODB_URI = os.environ['MONGODB_URI']
 
@@ -436,37 +441,9 @@ def agent():
                         })
 
             yield response_str + "\n----\n"
-        
-        # After processing all responses, display the outputs.
-        if social_outreach_items and event_id:
-            yield "\n*Social Outreach Groups*:\n"
-            for group in social_outreach_items:
-                yield f"- {group}\n"
 
-        if resource_items and event_id:
-            yield "\n*Required Resources*:\n"
-            for resource in resource_items:
-                yield f"- {resource}\n"
-
-        if volunteer_email_items and event_id:
-            yield "\n*Volunteer Outreach Email*:\n"
-            yield f"Subject: {volunteer_email_items['subject']}\n"
-            yield f"Body: {volunteer_email_items['body']}\n"
-
-        if event_id:
-            yield f"\n*Event ID*: {event_id}\n"
-        
-        if schedule_lines:
-            yield "\n*Schedule*:\n"
-            for line in schedule_lines:
-                yield f"{line}\n"
-        
-        if permit_inter:
-            yield "\n*Permit*:\n"
-            for line in permit_inter:
-                yield f"{line}\n"
 
     return Response(generate(), content_type="text/plain")
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=5001, threaded=True)

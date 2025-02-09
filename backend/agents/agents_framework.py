@@ -221,7 +221,7 @@ def outreach_volunteer_node(state: State) -> Command[Literal["Supervisor"]]:
                 HumanMessage(content=result["messages"][-1].content, name="Volunteer_Outreach")
             ]
         },
-        goto="Supervisor",
+        goto="Schedule",
     )
 
 
@@ -239,7 +239,7 @@ def outreach_social_node(state: State) -> Command[Literal["Supervisor"]]:
                 HumanMessage(content=result["messages"][-1].content, name="Social_Outreach")
             ]
         },
-        goto="Supervisor",
+        goto="Volunteer_Outreach",
     )
 
 
@@ -256,7 +256,7 @@ def resources_node(state: State) -> Command[Literal["Supervisor"]]:
                 HumanMessage(content=result["messages"][-1].content, name="Resources")
             ]
         },
-        goto="Supervisor",
+        goto="Social_Outreach",
     )
 
 schedule_agent = create_react_agent(
@@ -271,7 +271,7 @@ def schedule_node(state: State) -> Command[Literal["Supervisor"]]:
                 HumanMessage(content=result["messages"][-1].content, name="Schedule")
             ]
         },
-        goto="Supervisor",
+        goto="Budget",
     )
 
 permit_agent = create_react_agent(
@@ -310,7 +310,7 @@ def budget_node(state: State) -> Command[Literal["Supervisor"]]:
                 HumanMessage(content=result["messages"][-1].content, name="Budget")
             ]
         },
-        goto="Supervisor",
+        goto="Permits",
     )
 
 def supervisor_node(state: State) -> Command[Literal[*members, "__end__"]]:
