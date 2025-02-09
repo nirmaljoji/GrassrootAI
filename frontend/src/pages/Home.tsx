@@ -1,5 +1,7 @@
 import React from "react";
+import { useNavigate } from "react-router";
 import { ArrowRight } from "lucide-react";
+
 
 const Home = () => {
   const suggestions = [
@@ -9,8 +11,10 @@ const Home = () => {
     "Food Distribution",
   ];
 
+  const navigate = useNavigate();
+
   const handleBoxClick = () => {
-    console.log("Navigating to another page...");
+    navigate("/chat");
   };
 
   return (
