@@ -28,6 +28,7 @@ import SocialMediaCard from '@/components/details-cards/SocialMediaCard';
 import VolunteerOutreachCard from '@/components/details-cards/VolunteerOutreachCard';
 import BudgetCard from '@/components/details-cards/BudgetCard';
 import PermitCard from '@/components/details-cards/PermitCard';
+import { format, differenceInDays } from 'date-fns';
 
 interface NewDetailsViewProps {
   // Add any props if needed
@@ -134,6 +135,48 @@ const permitData = [
   }
 ];
 
+// Add this interface for schedule items
+interface ScheduleItem {
+  date: Date;
+  title: string;
+  description: string;
+  status: 'completed' | 'pending' | 'in-progress';
+}
+
+// Add this dummy schedule data
+const scheduleData: ScheduleItem[] = [
+  {
+    date: new Date('2024-01-15'),
+    title: 'Initial Planning',
+    description: 'Team assembly and preliminary planning',
+    status: 'completed'
+  },
+  {
+    date: new Date('2024-02-01'),
+    title: 'Venue Booking',
+    description: 'Secure conference center and facilities',
+    status: 'completed'
+  },
+  {
+    date: new Date('2024-02-15'),
+    title: 'Speaker Confirmation',
+    description: 'Finalize keynote speakers and sessions',
+    status: 'in-progress'
+  },
+  {
+    date: new Date('2024-03-01'),
+    title: 'Marketing Launch',
+    description: 'Begin promotional campaigns',
+    status: 'pending'
+  },
+  {
+    date: new Date('2024-03-15'),
+    title: 'Event Day',
+    description: 'Tech Conference 2024 begins',
+    status: 'pending'
+  }
+];
+
 const NewDetailsView: React.FC<NewDetailsViewProps> = () => {
   const { id } = useParams();
   const eventName = "Tech Conference 2024"; // Replace with actual event name from your data
@@ -148,17 +191,48 @@ const NewDetailsView: React.FC<NewDetailsViewProps> = () => {
           </h1>
           <Separator className="bg-gray-700 my-4" />
           <ScrollArea className="flex-grow">
-            {/* Add additional left panel content here */}
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <h2 className="text-xl font-semibold text-gray-200">Event Details</h2>
-                <p className="text-gray-400">ID: {id}</p>
-              </div>
+            <div className="relative py-4">
+              {/* Vertical timeline line */}
+              <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gray-700 transform -translate-x-1/2" />
               
-              <div className="space-y-2">
-                <h2 className="text-xl font-semibold text-gray-200">Quick Actions</h2>
-                {/* Add quick action buttons here */}
-              </div>
+              {scheduleData.map((item, index) => (
+                <div key={index} className="relative mb-8">
+                  {/* Date node */}
+                  <div className="absolute left-1/2 transform -translate-x-1/2">
+                    <div className={`w-2.5 h-2.5 rounded-full border ${
+                      item.status === 'completed' ? 'bg-green-500 border-green-600' :
+                      item.status === 'in-progress' ? 'bg-blue-500 border-blue-600' :
+                      'bg-gray-500 border-gray-600'
+                    }`} />
+                  </div>
+
+                  {/* Content container */}
+                  <div className={`flex w-full ${index % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`w-[45%] ${index % 2 === 0 ? 'text-right pr-6' : 'text-left pl-6'}`}>
+                      <div className="bg-gray-900/50 rounded-md p-2.5 hover:bg-gray-900 transition-colors">
+                        <div className="flex items-center gap-2 mb-0.5 text-xs text-gray-400">
+                          {format(item.date, 'MMM dd')}
+                        </div>
+                        <h3 className="text-sm font-medium text-white">
+                          {item.title}
+                        </h3>
+                        <p className="text-xs text-gray-400 line-clamp-2">
+                          {item.description}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Days counter (if not the last item) */}
+                  {index < scheduleData.length - 1 && (
+                    <div className="absolute left-1/2 transform -translate-x-1/2 mt-4 text-center">
+                      <span className="text-xs text-gray-500">
+                        {differenceInDays(scheduleData[index + 1].date, item.date)}d
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </ScrollArea>
         </div>
@@ -168,13 +242,20 @@ const NewDetailsView: React.FC<NewDetailsViewProps> = () => {
       <div className="w-2/3 bg-white p-8">
         <ScrollArea className="h-full">
           <div className="max-w-3xl mx-auto relative min-h-[calc(100vh-4rem)] flex items-center">
+            {/* Title Section */}
+            <div className="absolute top-0 left-0 right-0 text-center mb-8">
+              <h2 className="text-2xl font-medium text-gray-900">Your Personalized Event Plan</h2>
+              <p className="text-sm text-gray-500 mt-1">Everything you need to make your event successful</p>
+              <div className="mt-4 mb-8 w-20 h-1 bg-black mx-auto rounded-full"></div>
+            </div>
+
             {/* Vertical line connecting the cards */}
             <div className="absolute left-1/2 top-[10%] bottom-[10%] w-0.5 bg-gray-200 -translate-x-1/2" />
 
             <Accordion 
               type="single" 
               collapsible 
-              className="w-full space-y-16 my-12"
+              className="w-full space-y-16 my-12 pt-24"
             >
               {/* Resources Card */}
               <div className="relative">
