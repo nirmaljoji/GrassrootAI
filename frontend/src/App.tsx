@@ -3,6 +3,7 @@ import NotFound from "./pages/NotFound";
 import "./App.css";
 import { Route, Routes } from "react-router";
 import DetailsView from "./pages/DetailsView";
+import Chatpage from "./pages/Chatpage";
 
 const App = () => {
   return (
