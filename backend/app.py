@@ -19,9 +19,54 @@ MONGODB_URI = os.environ['MONGODB_URI']
 print(MONGODB_URI)
 
 client = MongoClient(MONGODB_URI)
+db = client['events_db']
+events_collection = db['events']
 
 for db_info in client.list_database_names():
         print(db_info)
+
+def extract_event_details(text: str):
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{
+                "role": "system",
+                "content": """You are an event planning assistant. Extract event details from the user's message.
+                    Return ONLY a JSON object with these fields:
+                    {
+                        "event": "exact event name or null",
+                        "location": "exact location or null",
+                        "budget": number without currency symbol or null,
+                        "num_of_people": number only or null,
+                        "date": "YYYY-MM-DD format or null"
+                    }
+                    Extract ONLY what is explicitly mentioned. Do not infer or guess."""
+            }, {
+                "role": "user",
+                "content": text
+            }]
+        )
+        return json.loads(response.choices[0].message['content'])
+    except:
+        return None
+
+def get_next_prompt(event_doc):
+    if not event_doc or not event_doc.get('event'):
+        return "To help plan your event, I need some details. What's the name of your event?"
+    
+    if not event_doc.get('location'):
+        return f"Great! Where will '{event_doc['event']}' be held?"
+    
+    if not event_doc.get('budget'):
+        return "What's your budget for this event?"
+    
+    if not event_doc.get('num_of_people'):
+        return "How many people are you expecting at the event?"
+    
+    if not event_doc.get('date'):
+        return "What's the date for your event? (Please specify in YYYY-MM-DD format)"
+    
+    return "Perfect! I have all the essential details. Would you like to review them or discuss something specific?"
 
 @app.route('/api/hello')
 def hello():
