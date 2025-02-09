@@ -11,23 +11,146 @@ interface Message {
   timestamp: Date;
 }
 
+interface EventDetails {
+  event: string | null;
+  location: string | null;
+  budget: number | null;
+  num_of_people: number | null;
+  date: string | null;
+}
+
 const Chatpage = () => {
   const [messages, setMessages] = useState<Message[]>([{
-    content: "Hello! I'm your event planning assistant. Let's work together to plan your event. What would you like to discuss first?",
+    content: "Hello! I'm your event planning assistant. What's the name of your event?",
     sender: 'bot',
     timestamp: new Date()
   }]);
+  
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [currentField, setCurrentField] = useState<keyof EventDetails>('event');
+  const [completedFields, setCompletedFields] = useState<Set<string>>(new Set());
   
-  const [eventDetails, setEventDetails] = useState({
-    nameChecked: false,
-    locationChecked: false,
-    budgetChecked: false,
-    peopleChecked: false,
-    datesChecked: false
+  const [eventDetails, setEventDetails] = useState<EventDetails>({
+    event: null,
+    location: null,
+    budget: null,
+    num_of_people: null,
+    date: null
   });
+
+  const extractEventDetails = (message: string): boolean => {
+    switch (currentField) {
+      case 'event':
+        if (message.trim()) {
+          setEventDetails(prev => ({ ...prev, event: message.trim() }));
+          setCompletedFields(prev => new Set(prev).add('event'));
+          setCurrentField('location');
+          return true;
+        }
+        return false;
+
+      case 'location':
+        if (message.trim()) {
+          setEventDetails(prev => ({ ...prev, location: message.trim() }));
+          setCompletedFields(prev => new Set(prev).add('location'));
+          setCurrentField('budget');
+          return true;
+        }
+        return false;
+        
+      case 'budget':
+        if (message.includes('$')) {
+          const budget = parseFloat(message.replace(/[^0-9.]/g, ''));
+          if (!isNaN(budget)) {
+            setEventDetails(prev => ({ ...prev, budget }));
+            setCompletedFields(prev => new Set(prev).add('budget'));
+            setCurrentField('num_of_people');
+            return true;
+          }
+        }
+        return false;
+        
+      case 'num_of_people':
+        const num = parseInt(message.replace(/[^0-9]/g, ''));
+        if (!isNaN(num)) {
+          setEventDetails(prev => ({ ...prev, num_of_people: num }));
+          setCompletedFields(prev => new Set(prev).add('num_of_people'));
+          setCurrentField('date');
+          return true;
+        }
+        return false;
+        
+      case 'date':
+        const dateMatch = message.match(/\d{4}-\d{2}-\d{2}/);
+        if (dateMatch) {
+          setEventDetails(prev => ({ ...prev, date: dateMatch[0] }));
+          setCompletedFields(prev => new Set(prev).add('date'));
+          setCurrentField('date');
+          return true;
+        }
+        return false;
+
+      default:
+        return false;
+    }
+  };
+
+  const getNextPrompt = () => {
+    switch(currentField) {
+      case 'event':
+        return "What's the name of your event?";
+      case 'location':
+        return `Great! Where will '${eventDetails.event}' be held?`;
+      case 'budget':
+        return "What's your budget for this event? (Please include $ symbol)";
+      case 'num_of_people':
+        return "How many people are you expecting at the event?";
+      case 'date':
+        return "What's the date for your event? (Format: YYYY-MM-DD)";
+    //   case 'complete':
+        return "Perfect! I have all the essential details. Would you like to review them?";
+      default:
+        return "I couldn't understand that. Please try again.";
+    }
+  };
+
+  const handleSendMessage = () => {
+    if (!inputMessage.trim()) return;
+
+    // Add user message
+    setMessages(prev => [...prev, {
+      content: inputMessage,
+      sender: 'user',
+      timestamp: new Date()
+    }]);
+
+    // Extract details from user message
+    const detailsExtracted = extractEventDetails(inputMessage);
+
+    // Add bot response
+    setTimeout(() => {
+      const nextPrompt = getNextPrompt();
+      setMessages(prev => [...prev, {
+        content: detailsExtracted ? nextPrompt : "I couldn't understand that. " + nextPrompt,
+        sender: 'bot',
+        timestamp: new Date()
+      }]);
+    }, 500);
+
+    setInputMessage('');
+  };
+
+  const formatValue = (key: keyof EventDetails, value: any): string => {
+    if (value === null) return 'Not provided';
+    switch (key) {
+      case 'budget': return `$${value}`;
+      case 'num_of_people': return `${value} people`;
+      case 'date': return value;
+      default: return value.toString();
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -36,44 +159,6 @@ const Chatpage = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return;
-
-    const userMessage: Message = {
-      content: inputMessage,
-      sender: 'user',
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInputMessage('');
-    setIsLoading(true);
-
-    setTimeout(() => {
-      const botMessage: Message = {
-        content: "I understand. Let me help you with that. What is the location of the event?",
-        sender: 'bot',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, botMessage]);
-      setIsLoading(false);
-    }, 1000);
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
-  const toggleCheck = (field: keyof typeof eventDetails) => {
-    setEventDetails(prev => ({
-      ...prev,
-      [field]: !prev[field]
-    }));
-  };
 
   return (
     <div className="flex flex-row h-screen w-full">
@@ -86,55 +171,18 @@ const Chatpage = () => {
             </h2>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex items-center space-x-4 bg-black p-3 rounded-lg">
-              <Checkbox 
-                id="name"
-                checked={eventDetails.nameChecked}
-                onCheckedChange={() => toggleCheck('nameChecked')}
-                className="border-neutral-600"
-              />
-              <label htmlFor="name" className="text-white font-medium">Name of Event</label>
-            </div>
-
-            <div className="flex items-center space-x-4 bg-black p-3 rounded-lg">
-              <Checkbox 
-                id="location"
-                checked={eventDetails.locationChecked}
-                onCheckedChange={() => toggleCheck('locationChecked')}
-                className="border-neutral-600"
-              />
-              <label htmlFor="location" className="text-white font-medium">Location of Event</label>
-            </div>
-
-            <div className="flex items-center space-x-4 bg-black p-3 rounded-lg">
-              <Checkbox 
-                id="budget"
-                checked={eventDetails.budgetChecked}
-                onCheckedChange={() => toggleCheck('budgetChecked')}
-                className="border-neutral-600"
-              />
-              <label htmlFor="budget" className="text-white font-medium">Budget</label>
-            </div>
-
-            <div className="flex items-center space-x-4 bg-black p-3 rounded-lg">
-              <Checkbox 
-                id="people"
-                checked={eventDetails.peopleChecked}
-                onCheckedChange={() => toggleCheck('peopleChecked')}
-                className="border-neutral-600"
-              />
-              <label htmlFor="people" className="text-white font-medium">Number of People</label>
-            </div>
-
-            <div className="flex items-center space-x-4 bg-black p-3 rounded-lg">
-              <Checkbox 
-                id="dates"
-                checked={eventDetails.datesChecked}
-                onCheckedChange={() => toggleCheck('datesChecked')}
-                className="border-neutral-600"
-              />
-              <label htmlFor="dates" className="text-white font-medium">Dates of Event</label>
-            </div>
+            {Object.entries(eventDetails).map(([field, value]) => (
+              <div key={field} className="flex items-center space-x-4 bg-black p-3 rounded-lg">
+                <Checkbox 
+                  checked={completedFields.has(field)}
+                  className="border-neutral-600"
+                  disabled
+                />
+                <label className="text-white font-medium">
+                  {field.replace(/_/g, ' ').charAt(0).toUpperCase() + field.slice(1)}: {formatValue(field as keyof EventDetails, value)}
+                </label>
+              </div>
+            ))}
           </CardContent>
         </Card>
       </div>
@@ -151,31 +199,9 @@ const Chatpage = () => {
                     : 'bg-gray-100 text-gray-800'
                 }`}>
                   <p>{message.content}</p>
-                  <div className={`text-xs mt-1 ${
-                    message.sender === 'user' 
-                      ? 'text-gray-300' 
-                      : 'text-gray-500'
-                  }`}>
-                    {message.timestamp.toLocaleTimeString([], { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    })}
-                  </div>
                 </div>
               </div>
             ))}
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="bg-gray-100 p-4 rounded-lg">
-                  <div className="flex space-x-2">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
-                  </div>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
           </div>
         </ScrollArea>
         
@@ -184,16 +210,13 @@ const Chatpage = () => {
             <Input 
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
               placeholder="Type your message here..." 
               className="flex-1"
-              disabled={isLoading}
             />
             <Button 
-              onClick={handleSendMessage} 
-              variant="default"
+              onClick={handleSendMessage}
               className="bg-black hover:bg-neutral-800 text-white"
-              disabled={isLoading}
             >
               Send
             </Button>
