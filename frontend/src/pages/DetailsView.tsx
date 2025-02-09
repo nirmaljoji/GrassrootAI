@@ -4,6 +4,9 @@ import TodoList from "../components/TodoList";
 import Permits from "@/components/Permits";
 import SocialMedia from "@/components/SocialMedia";
 import Outreach from "@/components/Outreach";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 const permits = [
   { id: 1, text: "Permit 1", completed: false },
@@ -17,10 +20,18 @@ interface OutreachTemplate {
   id: string;
 }
 
+const ITEMS_PER_PAGE = 5;
+
 const DetailsView: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const [outreachTemplates, setOutreachTemplates] = useState<OutreachTemplate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedSections, setExpandedSections] = useState({
+    resources: true,
+    permits: true,
+    socialMedia: true,
+  });
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const fetchOutreachTemplates = async () => {
@@ -50,28 +61,135 @@ const DetailsView: React.FC = () => {
     );
   };
 
+  const toggleSection = (section: keyof typeof expandedSections) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  };
+
+  const totalPages = Math.ceil(outreachTemplates.length / ITEMS_PER_PAGE);
+  const paginatedOutreachTemplates = outreachTemplates.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   return (
-    <div className="grid grid-cols-3 gap-4 p-4 h-screen">
-      <div className="col-span-1 p-4 space-y-4 h-full overflow-y-auto">
-        <h2 className="text-xl font-bold mb-4">Title</h2>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean cursus maximus elementum. Cras elementum viverra ex, eu luctus quam vestibulum et. Donec vulputate mollis magna, quis bibendum lectus lobortis vitae.</p>
+    <div className="flex gap-4 p-6 h-screen bg-black">
+      {/* Left column - fixed width */}
+      <div className="w-[300px] flex-shrink-0">
+        <Card className="h-full bg-white">
+          <CardHeader>
+            <CardTitle>Event Details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit...
+            </p>
+          </CardContent>
+        </Card>
       </div>
-      <div className="col-span-2 ph-4 pv-1 space-y-4 h-full overflow-y-auto">
-        <h2 className="text-xl font-bold mb-4">
-          Column 2
-        </h2>
-        <p>Content for the second column.</p>
-        <TodoList listName="Resources" eventId={eventId}/>
-        <Permits permits={permits} />
-        <SocialMedia eventId={eventId} />
+
+      {/* Right column - fills remaining space */}
+      <div className="flex-1 flex flex-col gap-4 overflow-y-auto min-h-0">
+        {/* Resources Section */}
+        <div className="bg-white rounded-lg border shadow-sm">
+          <div 
+            className="flex flex-row items-center justify-between p-6 cursor-pointer hover:bg-gray-50 rounded-t-lg transition-colors"
+            onClick={() => toggleSection('resources')}
+          >
+            <h3 className="text-xl font-bold">Resources</h3>
+            <Button variant="ghost" size="sm" className="hover:bg-transparent">
+              {expandedSections.resources ? (
+                <ChevronUp className="h-4 w-4 transition-transform duration-200" />
+              ) : (
+                <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+              )}
+            </Button>
+          </div>
+          <div
+            className={`overflow-hidden transition-all duration-200 ease-in-out ${
+              expandedSections.resources ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+            }`}
+          >
+            <div className="px-6 pb-6">
+              <TodoList 
+                listName="Resources" 
+                eventId={eventId} 
+                hideHeader={true}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Permits Section */}
+        <div className="bg-white rounded-lg border shadow-sm">
+          <div 
+            className="flex flex-row items-center justify-between p-6 cursor-pointer hover:bg-gray-50 rounded-t-lg transition-colors"
+            onClick={() => toggleSection('permits')}
+          >
+            <h3 className="text-xl font-bold">Permits</h3>
+            <Button variant="ghost" size="sm" className="hover:bg-transparent">
+              {expandedSections.permits ? (
+                <ChevronUp className="h-4 w-4 transition-transform duration-200" />
+              ) : (
+                <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+              )}
+            </Button>
+          </div>
+          <div
+            className={`overflow-hidden transition-all duration-200 ease-in-out ${
+              expandedSections.permits ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+            }`}
+          >
+            <div className="px-6 pb-6">
+              <Permits 
+                permits={permits} 
+                // hideHeader={true}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Social Media Section */}
+        <div className="bg-white rounded-lg border shadow-sm">
+          <div 
+            className="flex flex-row items-center justify-between p-6 cursor-pointer hover:bg-gray-50 rounded-t-lg transition-colors"
+            onClick={() => toggleSection('socialMedia')}
+          >
+            <h3 className="text-xl font-bold">Social Media</h3>
+            <Button variant="ghost" size="sm" className="hover:bg-transparent">
+              {expandedSections.socialMedia ? (
+                <ChevronUp className="h-4 w-4 transition-transform duration-200" />
+              ) : (
+                <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+              )}
+            </Button>
+          </div>
+          <div
+            className={`overflow-hidden transition-all duration-200 ease-in-out ${
+              expandedSections.socialMedia ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+            }`}
+          >
+            <div className="px-6 pb-6">
+              <SocialMedia 
+                eventId={eventId} 
+                // hideHeader={true}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Outreach Section */}
         {outreachTemplates.map((template) => (
-          <Outreach 
-            key={template.id}
-            defaultText={template.subject}
-            defaultSubject={template.subject}
-            templateId={template.id}
-            onComplete={handleOutreachComplete}
-          />
+          <div key={template.id} className="bg-white rounded-lg border shadow-sm p-6">
+            <Outreach
+              defaultText={template.subject}
+              defaultSubject={template.subject}
+              templateId={template.id}
+              onComplete={handleOutreachComplete}
+            />
+          </div>
         ))}
       </div>
     </div>

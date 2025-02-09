@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import { ChevronUp, ChevronDown } from "lucide-react";
 
 interface SocialMediaItem {
   type: "facebook" | "x" | "instagram";
@@ -131,6 +133,7 @@ const SocialMediaRow: React.FC<{ item: SocialMediaItem; eventId?: string }> = ({
 const SocialMedia: React.FC<SocialMediaProps> = ({ eventId }) => {
   const [socialMediaItems, setSocialMediaItems] = useState<SocialMediaItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isOpen, setIsOpen] = useState(true);
 
   useEffect(() => {
     const fetchSocialMedia = async () => {
@@ -145,7 +148,6 @@ const SocialMedia: React.FC<SocialMediaProps> = ({ eventId }) => {
         
         const data = await response.json();
         
-        // Transform the data and set default type if not available
         const transformedData = data.map((item: any) => ({
           type: (item.type?.toLowerCase() || 'facebook') as "facebook" | "x" | "instagram",
           title: item.title,
@@ -164,37 +166,41 @@ const SocialMedia: React.FC<SocialMediaProps> = ({ eventId }) => {
     fetchSocialMedia();
   }, [eventId]);
 
-  if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Social Media</CardTitle>
-        </CardHeader>
-        <CardContent className="flex justify-center py-8">
-          <Spinner className="h-6 w-6" />
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Return null if there are no items
-  if (socialMediaItems.length === 0) {
-    return null;
-  }
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Social Media</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ul className="divide-y divide-gray-100">
-          {socialMediaItems.map((item, index) => (
-            <SocialMediaRow key={index} item={item} eventId={eventId} />
-          ))}
-        </ul>
-      </CardContent>
-    </Card>
+    <div className="bg-white rounded-lg border shadow-sm">
+      <div className="p-6">
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold">Social Media</h2>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="hover:bg-transparent">
+                {isOpen ? (
+                  <ChevronUp className="h-4 w-4 transition-transform duration-200" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+                )}
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          
+          <CollapsibleContent className="pt-4">
+            {loading ? (
+              <div className="flex justify-center py-4">
+                <Spinner className="h-6 w-6" />
+              </div>
+            ) : socialMediaItems.length > 0 ? (
+              <ul className="divide-y divide-gray-100">
+                {socialMediaItems.map((item, index) => (
+                  <SocialMediaRow key={index} item={item} eventId={eventId} />
+                ))}
+              </ul>
+            ) : (
+              <p className="text-muted-foreground text-sm">No social media items available.</p>
+            )}
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
+    </div>
   );
 };
 
