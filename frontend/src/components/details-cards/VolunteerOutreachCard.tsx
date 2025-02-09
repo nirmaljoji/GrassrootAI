@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Users, Mail, Star, Save, Paperclip, Bold, Italic, List, Link2, Image, Send } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,35 +9,40 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from "@/components/ui/accordion";
+import { useParams } from 'react-router';
 
-const volunteerEmailTemplate = {
-  subject: "Join Us as a Volunteer for Tech Conference 2024",
-  body: `Dear Tech Enthusiast,
-
-We're excited to invite you to be part of our upcoming Tech Conference 2024 as a volunteer! This is a fantastic opportunity to network with industry leaders and gain hands-on event management experience.
-
-Event Details:
-- Date: March 15-16, 2024
-- Venue: Singapore Convention Center
-- Roles: Registration, Session Management, Technical Support
-
-Benefits:
-• Free access to conference sessions
-• Exclusive volunteer t-shirt
-• Certificate of participation
-• Networking opportunities
-
-If you're interested, please reply with your:
-1. Full Name
-2. Contact Number
-3. Preferred Role
-4. Previous volunteer experience (if any)
-
-Best regards,
-Tech Conference 2024 Team`
-};
+interface VolunteerOutreach {
+  event_id: string;
+  subject: string;
+  body: string;
+  id: string;
+}
 
 const VolunteerOutreachCard = () => {
+  const { eventId } = useParams();
+  const [outreachData, setOutreachData] = useState<VolunteerOutreach | null>(null);
+
+  useEffect(() => {
+    const fetchOutreachData = async () => {
+      try {
+        const response = await fetch('http://localhost:5001/volunteer_outreach', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ eventId }),
+        });
+        const data = await response.json();
+        if (data && data.length > 0) {
+          setOutreachData(data[0]);
+        }
+      } catch (error) {
+        console.error('Error fetching volunteer outreach data:', error);
+      }
+    };
+    fetchOutreachData();
+  }, []);
+
   return (
     <AccordionItem value="volunteer" className="border rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 bg-white overflow-hidden z-10">
       <Card className="p-0">
@@ -54,16 +59,16 @@ const VolunteerOutreachCard = () => {
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">
                   <Mail className="h-4 w-4 text-gray-500" />
-                  <Input 
-                    placeholder="To" 
+                  <Input
+                    placeholder="To"
                     className="border-0 border-b focus-visible:ring-0 rounded-none px-1"
                   />
                 </div>
                 <div className="flex items-center space-x-2">
                   <Star className="h-4 w-4 text-gray-500" />
-                  <Input 
-                    placeholder="Subject" 
-                    defaultValue={volunteerEmailTemplate.subject}
+                  <Input
+                    placeholder="Subject"
+                    defaultValue={outreachData?.subject || ''}
                     className="border-0 border-b focus-visible:ring-0 rounded-none px-1"
                   />
                 </div>
@@ -92,9 +97,9 @@ const VolunteerOutreachCard = () => {
               </div>
 
               {/* Email Body */}
-              <Textarea 
+              <Textarea
                 className="min-h-[300px] resize-none border-0 focus-visible:ring-0 p-0"
-                defaultValue={volunteerEmailTemplate.body}
+                defaultValue={outreachData?.body || ''}
               />
 
               {/* Email Footer */}
@@ -122,4 +127,4 @@ const VolunteerOutreachCard = () => {
   );
 };
 
-export default VolunteerOutreachCard; 
+export default VolunteerOutreachCard;

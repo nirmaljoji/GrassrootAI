@@ -195,10 +195,14 @@ def schedule():
 @app.route("/events", methods=["GET"])
 def events():
     # Make an api call to mongodb and get all the resources and return them
-        
+    event_id = request.args.get("eventId")
     result = []
     
-    for resource in client['sanctuary']['events'].find({}):
+    filter = {}
+    if event_id:
+        filter = {"event_id": event_id}
+    
+    for resource in client['sanctuary']['events'].find(filter):
         resource["id"] = str(resource["_id"])
         del resource["_id"]
         result.append(resource)
