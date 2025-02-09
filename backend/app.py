@@ -27,6 +27,14 @@ events_collection = db['events']
 
 for db_info in client.list_database_names():
         print(db_info)
+        
+class JSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, ObjectId):
+            return str(obj)
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return super().default(obj)
 
 def extract_event_details(text: str):
     try:
@@ -92,6 +100,8 @@ def chat():
     return Response(generate(), content_type="text/plain")
 
 
+
+
 @app.route("/resources", methods=["POST"])
 def resources():
     # Make an api call to mongodb and get all the resources and return them
@@ -107,7 +117,21 @@ def resources():
         print(resource)
         resource["_id"] = str(resource["_id"])
         result.append(resource)
-    return Response(json.dumps(result), content_type="application/json")
+    
+    return Response(json.dumps(result, cls=JSONEncoder), content_type="application/json")
+
+@app.route("/events", methods=["GET"])
+def events():
+    # Make an api call to mongodb and get all the resources and return them
+        
+    result = []
+    
+    for resource in client['sanctuary']['events'].find({}):
+        print(resource)
+        resource["_id"] = str(resource["_id"])
+        # del resource["created_at"]
+        result.append(resource)
+    return Response(json.dumps(result, cls=JSONEncoder), content_type="application/json")
 
 @app.route("/agent", methods=["POST"])
 def agent():
@@ -209,5 +233,3 @@ def agent():
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
-    
-    
