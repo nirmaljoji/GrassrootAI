@@ -16,6 +16,11 @@ load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
+
+# Increase request timeout
+app.config['PERMANENT_SESSION_LIFETIME'] = 300  # 5 minutes
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max-limit
+
 openai.api_key = os.getenv("OPENAI_API_KEY")
 MONGODB_URI = os.environ['MONGODB_URI']
 
@@ -192,13 +197,35 @@ def schedule():
     
     return Response(json.dumps(result, cls=JSONEncoder), content_type="application/json")
 
-@app.route("/events", methods=["GET"])
-def events():
-    # Make an api call to mongodb and get all the resources and return them
+@app.route("/budget", methods=["POST"])
+def budget():
+    # Make an api call to mongodb and get all the social_outreach and return them
+    data = request.get_json() or {}
+    event_id = data.get("eventId")
+    
+    if not event_id:
+        return jsonify({"error": "Missing eventId in request body"}), 400
         
     result = []
     
-    for resource in client['sanctuary']['events'].find({}):
+    for resource in client['sanctuary']['budget'].find({"event_id": event_id}):
+        resource["id"] = str(resource["_id"])
+        del resource["_id"]
+        result.append(resource)
+    
+    return Response(json.dumps(result, cls=JSONEncoder), content_type="application/json")
+
+@app.route("/events", methods=["GET"])
+def events():
+    # Make an api call to mongodb and get all the resources and return them
+    event_id = request.args.get("eventId")
+    result = []
+    
+    filter = {}
+    if event_id:
+        filter = {"event_id": event_id}
+    
+    for resource in client['sanctuary']['events'].find(filter):
         resource["id"] = str(resource["_id"])
         del resource["_id"]
         result.append(resource)
@@ -361,6 +388,40 @@ def agent():
                             'title': _schedule_title,
                             'description': _schedule_desc
                         })
+
+            if "'Budget'" in response_str:
+                match = re.search(r"content='(.+?)'", response_str, re.DOTALL)
+                if match:
+                    data = match.group(1)
+
+                    pattern = r"-\s*(.+?):\s*([\d.]+)%"
+
+                    items = []
+                    for line in data.strip().splitlines():
+                        match = re.search(pattern, line)
+                        if match:
+                            title = match.group(1).strip()
+                            percent = float(match.group(2))
+                            items.append({"title": title, "percent": percent})
+                        else:
+                            print("Warning: Could not parse line:", line)
+
+                    # Calculate the total percentage
+                    total = sum(item['percent'] for item in items)
+
+                    # If the sum is not 100, adjust each percentage to be relative
+                    if total != 100:
+                        for item in items:
+                            item['percent'] = round(100 * item['percent'] / total, 2)
+                    
+                    permit_collection = client['sanctuary']['budget']
+                    for item in items:
+                        permit_collection.insert_one({
+                            'event_id': event_id,
+                            'title': item['title'],
+                            'percent': item['percent']
+                        })
+
             
             if "'Permits'" in response_str:
                 match = re.search(r"content='(.+?)'", response_str, re.DOTALL)
@@ -380,37 +441,9 @@ def agent():
                         })
 
             yield response_str + "\n----\n"
-        
-        # After processing all responses, display the outputs.
-        if social_outreach_items and event_id:
-            yield "\n*Social Outreach Groups*:\n"
-            for group in social_outreach_items:
-                yield f"- {group}\n"
 
-        if resource_items and event_id:
-            yield "\n*Required Resources*:\n"
-            for resource in resource_items:
-                yield f"- {resource}\n"
-
-        if volunteer_email_items and event_id:
-            yield "\n*Volunteer Outreach Email*:\n"
-            yield f"Subject: {volunteer_email_items['subject']}\n"
-            yield f"Body: {volunteer_email_items['body']}\n"
-
-        if event_id:
-            yield f"\n*Event ID*: {event_id}\n"
-        
-        if schedule_lines:
-            yield "\n*Schedule*:\n"
-            for line in schedule_lines:
-                yield f"{line}\n"
-        
-        if permit_inter:
-            yield "\n*Permit*:\n"
-            for line in permit_inter:
-                yield f"{line}\n"
 
     return Response(generate(), content_type="text/plain")
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=5001, threaded=True)

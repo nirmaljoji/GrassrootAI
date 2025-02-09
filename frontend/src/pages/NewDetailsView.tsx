@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -28,6 +28,7 @@ import SocialMediaCard from '@/components/details-cards/SocialMediaCard';
 import VolunteerOutreachCard from '@/components/details-cards/VolunteerOutreachCard';
 import BudgetCard from '@/components/details-cards/BudgetCard';
 import PermitCard from '@/components/details-cards/PermitCard';
+import { format, differenceInDays, addDays } from 'date-fns';
 
 interface NewDetailsViewProps {
   // Add any props if needed
@@ -134,9 +135,61 @@ const permitData = [
   }
 ];
 
+// Update the ScheduleItem interface to match the API response
+interface ScheduleItem {
+  event_id: string;
+  title: string;
+  description: string;
+  id: string;
+  date?: Date; // We'll calculate this
+}
+
 const NewDetailsView: React.FC<NewDetailsViewProps> = () => {
   const { id } = useParams();
-  const eventName = "Tech Conference 2024"; // Replace with actual event name from your data
+  const eventName = "Tech Conference 2024";
+  const [scheduleData, setScheduleData] = useState<ScheduleItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSchedule = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:5001/schedule', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            eventId: "67a89b36c96aba62ad1697ab" // You might want to use the actual id from params
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch schedule');
+        }
+
+        const data: ScheduleItem[] = await response.json();
+        
+        // Calculate dates based on the description (days)
+        const processedData = data.map(item => {
+          const daysUntilEvent = parseInt(item.description.split(' ')[0]);
+          return {
+            ...item,
+            date: addDays(new Date(), -daysUntilEvent), // Calculate date based on days
+            status: daysUntilEvent <= 0 ? 'completed' : 
+                   daysUntilEvent <= 7 ? 'in-progress' : 'pending'
+          };
+        });
+
+        setScheduleData(processedData);
+      } catch (error) {
+        console.error('Error fetching schedule:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSchedule();
+  }, [id]);
 
   return (
     <div className="flex h-screen w-full">
@@ -148,18 +201,50 @@ const NewDetailsView: React.FC<NewDetailsViewProps> = () => {
           </h1>
           <Separator className="bg-gray-700 my-4" />
           <ScrollArea className="flex-grow">
-            {/* Add additional left panel content here */}
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <h2 className="text-xl font-semibold text-gray-200">Event Details</h2>
-                <p className="text-gray-400">ID: {id}</p>
+            {isLoading ? (
+              <div className="text-center py-4">Loading schedule...</div>
+            ) : (
+              <div className="relative py-4">
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gray-700 transform -translate-x-1/2" />
+                
+                {scheduleData.map((item, index) => (
+                  <div key={item.id} className="relative mb-8">
+                    <div className="absolute left-1/2 transform -translate-x-1/2">
+                      <div className={`w-2.5 h-2.5 rounded-full border ${
+                        item.status === 'completed' ? 'bg-green-500 border-green-600' :
+                        item.status === 'in-progress' ? 'bg-blue-500 border-blue-600' :
+                        'bg-gray-500 border-gray-600'
+                      }`} />
+                    </div>
+
+                    <div className={`flex w-full ${index % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`w-[45%] ${index % 2 === 0 ? 'text-right pr-6' : 'text-left pl-6'}`}>
+                        <div className="bg-gray-900/50 rounded-md p-2.5 hover:bg-gray-900 transition-colors">
+                          <div className="flex items-center gap-2 mb-0.5 text-xs text-gray-400">
+                            {item.date && format(item.date, 'MMM dd')}
+                          </div>
+                          <h3 className="text-sm font-medium text-white">
+                            {item.title}
+                          </h3>
+                          <p className="text-xs text-gray-400 line-clamp-2">
+                            {item.description}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {index < scheduleData.length - 1 && (
+                      <div className="absolute left-1/2 transform -translate-x-1/2 mt-4 text-center">
+                        <span className="text-xs text-gray-500">
+                          {item.date && scheduleData[index + 1].date && 
+                            differenceInDays(scheduleData[index + 1].date, item.date)}d
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
-              
-              <div className="space-y-2">
-                <h2 className="text-xl font-semibold text-gray-200">Quick Actions</h2>
-                {/* Add quick action buttons here */}
-              </div>
-            </div>
+            )}
           </ScrollArea>
         </div>
       </div>
@@ -168,13 +253,20 @@ const NewDetailsView: React.FC<NewDetailsViewProps> = () => {
       <div className="w-2/3 bg-white p-8">
         <ScrollArea className="h-full">
           <div className="max-w-3xl mx-auto relative min-h-[calc(100vh-4rem)] flex items-center">
+            {/* Title Section */}
+            <div className="absolute top-0 left-0 right-0 text-center mb-8">
+              <h2 className="text-2xl font-medium text-gray-900">Your Personalized Event Plan</h2>
+              <p className="text-sm text-gray-500 mt-1">Everything you need to make your event successful</p>
+              <div className="mt-4 mb-8 w-20 h-1 bg-black mx-auto rounded-full"></div>
+            </div>
+
             {/* Vertical line connecting the cards */}
             <div className="absolute left-1/2 top-[10%] bottom-[10%] w-0.5 bg-gray-200 -translate-x-1/2" />
 
             <Accordion 
               type="single" 
               collapsible 
-              className="w-full space-y-16 my-12"
+              className="w-full space-y-16 my-12 pt-24"
             >
               {/* Resources Card */}
               <div className="relative">
