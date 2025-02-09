@@ -62,6 +62,8 @@ const Chatpage = () => {
 
   // Extract event details from user input
   const extractEventDetails = (message: string): boolean => {
+
+    console.log(message);
     switch (currentField) {
       case 'event':
         if (message.trim()) {
@@ -122,20 +124,22 @@ const Chatpage = () => {
   // Provide next prompt based on current field, skipping the repeated event question
   const getNextPrompt = () => {
     switch (currentField) {
-      case 'event':
+      // case 'event':
         // We've already asked for the event name in the initial message,
         // so just move on:
-        return "Great! Let's move on to location...";
+        // return "Great! Let's move on to location...";
+      case 'event':
+        return `Where will it be held?`;
       case 'location':
-        return `Where will '${eventDetails.event}' be held?`;
+        return `What's your budget for this event? (Please include $ symbol)`;
       case 'budget':
-        return "What's your budget for this event? (Please include $ symbol)";
+        return "how many people are you expecting at the event?";
       case 'num_of_people':
-        return "How many people are you expecting at the event?";
+        return "whats the date for your event? (Format: YYYY-MM-DD)";
       case 'date':
-        return "What's the date for your event? (Format: YYYY-MM-DD)";
-      default:
         return "Perfect! I have all the essential details. Would you like to review them?";
+      default:
+        return "Please try again?";
     }
   };
 

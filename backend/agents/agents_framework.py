@@ -22,7 +22,7 @@ outreach_social_tool = OutreachSocialTool()
 schedule_tool = ScheduleTool()
 budget_tool = BudgetTool()
 
-members = ["Budget", "Resources", "Social_Outreach", "Volunteer_Outreach", "Schedule", "Permits"]
+members = ["Resources", "Social_Outreach", "Volunteer_Outreach", "Schedule", "Permits", "Budget"]
 options = members + ["FINISH"]
 
 # Our team supervisor is an LLM node. It just picks the next agent to process
