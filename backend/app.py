@@ -154,6 +154,44 @@ def social_outreach():
     
     return Response(json.dumps(result, cls=JSONEncoder), content_type="application/json")
 
+@app.route("/permits", methods=["POST"])
+def permits():
+    # Make an api call to mongodb and get all the social_outreach and return them
+    data = request.get_json() or {}
+    event_id = data.get("eventId")
+    
+    if not event_id:
+        return jsonify({"error": "Missing eventId in request body"}), 400
+        
+    result = []
+    
+    for resource in client['sanctuary']['permit'].find({"event_id": event_id}):
+        print(resource)
+        resource["id"] = str(resource["_id"])
+        del resource["_id"]
+        result.append(resource)
+    
+    return Response(json.dumps(result, cls=JSONEncoder), content_type="application/json")
+
+
+@app.route("/schedule", methods=["POST"])
+def schedule():
+    # Make an api call to mongodb and get all the social_outreach and return them
+    data = request.get_json() or {}
+    event_id = data.get("eventId")
+    
+    if not event_id:
+        return jsonify({"error": "Missing eventId in request body"}), 400
+        
+    result = []
+    
+    for resource in client['sanctuary']['schedule'].find({"event_id": event_id}):
+        resource["id"] = str(resource["_id"])
+        del resource["_id"]
+        result.append(resource)
+    
+    return Response(json.dumps(result, cls=JSONEncoder), content_type="application/json")
+
 @app.route("/events", methods=["GET"])
 def events():
     # Make an api call to mongodb and get all the resources and return them
@@ -320,7 +358,7 @@ def agent():
                         _schedule_desc = _schedule_desc.strip()
                         schedule_collection.insert_one({
                             'event_id': event_id,
-                            'title': schedule_item,
+                            'title': _schedule_title,
                             'description': _schedule_desc
                         })
             
