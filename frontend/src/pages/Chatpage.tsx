@@ -12,9 +12,11 @@ import {
   DollarSign, 
   Users, 
   PartyPopper,
-  CheckCircle2
+  CheckCircle2,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useNavigate } from 'react-router-dom';
 
 interface Message {
   content: string;
@@ -53,6 +55,10 @@ const Chatpage = () => {
   });
 
   const progress = (completedFields.size / 5) * 100;
+
+  const navigate = useNavigate();
+
+  const [isCreating, setIsCreating] = useState(false);
 
   // Extract event details from user input
   const extractEventDetails = (message: string): boolean => {
@@ -188,6 +194,66 @@ const Chatpage = () => {
 
   const isAllCompleted = completedFields.size === 5;
 
+  const handleCreateEvent = async () => {
+    setIsCreating(true);
+    try {
+      const response = await fetch('http://localhost:5001/create-event', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          event_name: eventDetails.event,
+          location: eventDetails.location,
+          budget: eventDetails.budget,
+          attendees: eventDetails.num_of_people,
+          date: eventDetails.date
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create event');
+      }
+
+      const data = await response.json();
+      if (data.event_id) {
+        // Form a string from the event details
+        const event_data = `I want to create an event with the following details, event name: ${eventDetails.event} at location: ${eventDetails.location}`;
+
+        // Make the agent call
+        const agentResponse = await fetch('http://localhost:5001/agent', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: event_data,
+            event_id: data.event_id
+          })
+        });
+
+        if (!agentResponse.ok) {
+          throw new Error('Failed to process event with agent');
+        }
+
+        // Only navigate after successful agent call
+        navigate(`/details/${data.event_id}`);
+      }
+    } catch (error) {
+      console.error('Failed to create event:', error);
+      setMessages(prev => [
+        ...prev,
+        {
+          content: "Sorry, there was an error creating the event. Please try again.",
+          sender: 'bot',
+          timestamp: new Date()
+        }
+      ]);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   return (
     <div className="flex flex-row h-screen w-full">
       {/* Left Section (30%) */}
@@ -264,11 +330,21 @@ const Chatpage = () => {
                   ? "bg-green-500 hover:bg-green-600 text-white shadow-lg shadow-green-500/20" 
                   : "bg-neutral-800 text-neutral-400 cursor-not-allowed hover:bg-neutral-800"
               )}
-              disabled={!isAllCompleted}
+              disabled={!isAllCompleted || isCreating}
+              onClick={handleCreateEvent}
             >
               <span className="flex items-center gap-1.5">
-                {isAllCompleted && <CheckCircle2 className="w-3.5 h-3.5" />}
-                {isAllCompleted ? 'Generate Event Plan' : 'Complete All Details'}
+                {isCreating ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Creating Event...
+                  </>
+                ) : (
+                  <>
+                    {isAllCompleted && <CheckCircle2 className="w-3.5 h-3.5" />}
+                    {isAllCompleted ? 'Generate Event Plan' : 'Complete All Details'}
+                  </>
+                )}
               </span>
             </Button>
           </CardFooter>
