@@ -306,6 +306,20 @@ def agent():
                         'subject': subject,
                         'body': body
                     }
+            
+            if "'Schedule'" in response_str:
+                match = re.search(r"content='(.+?)'", response_str, re.DOTALL)
+                if match:
+                    raw_content = match.group(1)
+                    schedule_lines = [(ln.strip())[1:].strip() for ln in raw_content.split('\\n')]
+
+                    schedule_collection = client['sanctuary']['schedule']
+                    for schedule_item in schedule_lines:
+                        schedule_collection.insert_one({
+                            'event_id': event_id,
+                            'schedule_item': schedule_item
+                        })
+                        
 
             yield response_str + "\n----\n"
         
@@ -327,6 +341,11 @@ def agent():
 
         if event_id:
             yield f"\n*Event ID*: {event_id}\n"
+        
+        if schedule_lines:
+            yield "\n*Schedule*:\n"
+            for line in schedule_lines:
+                yield f"{line}\n"
 
     return Response(generate(), content_type="text/plain")
 
