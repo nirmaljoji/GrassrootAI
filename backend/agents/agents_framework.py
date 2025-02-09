@@ -13,6 +13,7 @@ from langchain_core.prompts import MessagesPlaceholder
 from langchain.output_parsers.openai_functions import JsonOutputFunctionsParser
 from .resource_search_tool import SearchTool
 from .outreach_social_tool import OutreachSocialTool
+from .agent_permit import PermitSearchTool
 from .schedule_tool import ScheduleTool
 
 resourse_search_tool = SearchTool()
@@ -22,6 +23,7 @@ schedule_tool = ScheduleTool()
 members = ["Resources", "Social_Outreach", "Volunteer_Outreach", "Schedule"]
 options = members + ["FINISH"]
 
+members = ["Resources", "Social_Outreach", "Volunteer_Outreach", "Permits"]
 # Our team supervisor is an LLM node. It just picks the next agent to process
 # and decides when the work is completed
 resource_prompt = """You are a resource planning expert for social initiatives. 
@@ -139,6 +141,20 @@ volunteer_outreach_prompt = (
     "Keep the tone friendly and enthusiastic while maintaining professionalism."
 )
 
+permit_prompt = (
+    "You are a permit planning expert for social initiatives.\n\n"
+    "First, make a call to the tool to get the permit requirements for the event: permit_search_tool\n\n"
+    "When asked about an event:\n"
+    "1. Determine the exact permits required based on the event details such as date, time, and location.\n"
+    "2. Consider events like blood donation drives, food drives, park cleanups, etc.\n"
+    "3. Provide the answer as a list, with each permit (and a brief description if needed) on a separate line.\n\n"
+    "And give the answer alone, do not add any extra lines, follow the same format as the example provided.\n\n"
+    "Example Q: What permits are required for a blood donation drive on July 4 at 456 Park Ave?\n"
+    "Answer:\n"
+    "- Health Department Permit: Ensures compliance with local health codes.\n"
+    "- Temporary Event Permit: Authorizes use of public space for the event.\n"
+)
+
 prompt = ChatPromptTemplate.from_messages(
     [
         ("system", system_prompt),
@@ -233,6 +249,28 @@ def schedule_node(state: State) -> Command[Literal["Supervisor"]]:
         goto="Supervisor",
     )
 
+permit_agent = create_react_agent(
+    llm,
+    tools=[PermitSearchTool()],
+    prompt=permit_prompt
+)
+
+def permit_node(state: dict) -> Command[str]:
+    """
+    This node represents the permits agent. It invokes the permit_agent using the given
+    state (which contains prior messages and context) and posts the result as a message with
+    the name "Permits". The agent then yields control back to the supervisor.
+    """
+    result = permit_agent.invoke(state)
+    return Command(
+        update={
+            "messages": [
+                HumanMessage(content=result["messages"][-1].content, name="Permits")
+            ]
+        },
+        goto="Supervisor",
+    )
+
 def supervisor_node(state: State) -> Command[Literal[*members, "__end__"]]:
     messages = [
         {"role": "system", "content": system_prompt},
@@ -253,7 +291,7 @@ def initialize_graph():
     builder.add_node("Social_Outreach", outreach_social_node)
     builder.add_node("Volunteer_Outreach", outreach_volunteer_node)
     builder.add_node("Schedule", schedule_node)
-
+    builder.add_node("Permits", permit_node)
     builder.set_entry_point("Supervisor")
     return builder.compile()
 
