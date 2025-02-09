@@ -10,6 +10,9 @@ import {
   AccordionContent,
 } from "@/components/ui/accordion";
 import { useParams } from 'react-router';
+import Markdown from 'react-markdown'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
 
 interface VolunteerOutreach {
   event_id: string;
@@ -21,6 +24,8 @@ interface VolunteerOutreach {
 const VolunteerOutreachCard = () => {
   const { eventId } = useParams();
   const [outreachData, setOutreachData] = useState<VolunteerOutreach | null>(null);
+  const [bodyContent, setBodyContent] = useState('');
+  const [subjectContent, setSubjectContent] = useState('');
 
   useEffect(() => {
     const fetchOutreachData = async () => {
@@ -35,6 +40,8 @@ const VolunteerOutreachCard = () => {
         const data = await response.json();
         if (data && data.length > 0) {
           setOutreachData(data[0]);
+          setBodyContent(data[0].body.replace(/\\n/g, '\n'));
+          setSubjectContent(data[0].subject.replace(/\\n/g, '\n'));
         }
       } catch (error) {
         console.error('Error fetching volunteer outreach data:', error);
@@ -68,7 +75,8 @@ const VolunteerOutreachCard = () => {
                   <Star className="h-4 w-4 text-gray-500" />
                   <Input
                     placeholder="Subject"
-                    defaultValue={outreachData?.subject || ''}
+                    value={subjectContent}
+                    onChange={(e) => setSubjectContent(e.target.value)}
                     className="border-0 border-b focus-visible:ring-0 rounded-none px-1"
                   />
                 </div>
@@ -97,10 +105,22 @@ const VolunteerOutreachCard = () => {
               </div>
 
               {/* Email Body */}
-              <Textarea
-                className="min-h-[300px] resize-none border-0 focus-visible:ring-0 p-0"
-                defaultValue={outreachData?.body || ''}
-              />
+              <Tabs defaultValue="edit" className="w-full">
+                <TabsList className="mb-2">
+                  <TabsTrigger value="edit">Edit</TabsTrigger>
+                  <TabsTrigger value="preview">Preview</TabsTrigger>
+                </TabsList>
+                <TabsContent value="edit">
+                  <Textarea
+                    className="min-h-[300px] resize-none border-0 focus-visible:ring-0 p-0"
+                    value={bodyContent}
+                    onChange={(e) => setBodyContent(e.target.value)}
+                  />
+                </TabsContent>
+                <TabsContent value="preview" className="min-h-[300px] prose">
+                  <Markdown>{bodyContent}</Markdown>
+                </TabsContent>
+              </Tabs>
 
               {/* Email Footer */}
               <div className="flex items-center justify-between pt-2 border-t">
