@@ -113,8 +113,24 @@ def resources():
         
     result = []
     
-    for resource in client['sanctuary']['resources'].find({}):
-        print(resource)
+    for resource in client['sanctuary']['resources'].find({"event_id": event_id}):
+        resource["_id"] = str(resource["_id"])
+        result.append(resource)
+    
+    return Response(json.dumps(result, cls=JSONEncoder), content_type="application/json")
+
+@app.route("/social_outreach", methods=["POST"])
+def social_outreach():
+    # Make an api call to mongodb and get all the social_outreach and return them
+    data = request.get_json() or {}
+    event_id = data.get("eventId")
+    
+    if not event_id:
+        return jsonify({"error": "Missing eventId in request body"}), 400
+        
+    result = []
+    
+    for resource in client['sanctuary']['social_outreach'].find({"event_id": event_id}):
         resource["_id"] = str(resource["_id"])
         result.append(resource)
     
@@ -127,9 +143,7 @@ def events():
     result = []
     
     for resource in client['sanctuary']['events'].find({}):
-        print(resource)
         resource["_id"] = str(resource["_id"])
-        # del resource["created_at"]
         result.append(resource)
     return Response(json.dumps(result, cls=JSONEncoder), content_type="application/json")
 
