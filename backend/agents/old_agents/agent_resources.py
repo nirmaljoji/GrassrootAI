@@ -17,7 +17,6 @@ class AgentState(TypedDict):
 
 
 class Agent:
-
     def __init__(self, model, tools, system=""):
         self.system = system
         graph = StateGraph(AgentState)

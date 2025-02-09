@@ -4,6 +4,8 @@ import openai
 from dotenv import load_dotenv
 import os
 from pymongo import MongoClient
+from agents.agents_framework import process_user_message
+from langchain_core.messages import HumanMessage
 
 load_dotenv()
 
@@ -11,6 +13,8 @@ app = Flask(__name__)
 CORS(app)
 openai.api_key = os.getenv("OPENAI_API_KEY")
 MONGODB_URI = os.environ['MONGODB_URI']
+
+print(MONGODB_URI)
 
 client = MongoClient(MONGODB_URI)
 
@@ -37,10 +41,18 @@ def chat():
     
     return Response(generate(), content_type="text/plain")
 
-
+@app.route("/agent", methods=["POST"])
+def agent(): 
+    user_message = request.json.get("message")
+    
+    def generate():
+        responses = process_user_message(user_message)
+        for response in responses:
+            yield str(response) + "\n----\n"
+    
+    return Response(generate(), content_type="text/plain")
 
 if __name__ == '__main__':
-    
     app.run(debug=True, port=5001)
     
     
