@@ -6,22 +6,24 @@ from typing_extensions import TypedDict
 from langchain_openai import ChatOpenAI
 from langgraph.graph import MessagesState, END
 from langgraph.types import Command
-from .agent_outreach_social import agent_outreach_social
+# from .agent_outreach_social import agent_outreach_social
 from .agent_outreach_volunteer import VolunteerOutreachTool
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.prompts import MessagesPlaceholder
 from langchain.output_parsers.openai_functions import JsonOutputFunctionsParser
 from .resource_search_tool import SearchTool
 from .outreach_social_tool import OutreachSocialTool
-# from agent_supervisor import supervisor_node
+from .schedule_tool import ScheduleTool
+
 resourse_search_tool = SearchTool()
 outreach_social_tool = OutreachSocialTool()
+schedule_tool = ScheduleTool()
 
-members = ["Resources", "Social_Outreach", "Volunteer_Outreach"]
-# Our team supervisor is an LLM node. It just picks the next agent to process
-# and decides when the work is completed
+members = ["Resources", "Social_Outreach", "Volunteer_Outreach", "Schedule"]
 options = members + ["FINISH"]
 
+# Our team supervisor is an LLM node. It just picks the next agent to process
+# and decides when the work is completed
 resource_prompt = """You are a resource planning expert for social initiatives. 
 
 First make a call to the tool to get the latest information regardin the event: resource_search_tool
@@ -84,6 +86,31 @@ Answer:
 - group_name 2
 - group_name 3
 - group_name 4
+"""
+
+schedule_prompt = """
+You are an event scheduling expert. When given event details, create a detailed timeline that:
+1. Breaks down all major tasks and activities
+2. Specifies the duration and sequence of each task
+3. Identifies dependencies between tasks
+4. Allocates appropriate time buffers
+5. Considers resource availability
+
+First make a call to the tool to get the above information by making use of: schedule_tool
+
+Provide the schedule in a clear format. Do not add any extra line. Give me the points alone. Do not add any starter text. If there more
+than 5 points, just categorise and give me max 5 points.
+
+Example Query: Create a schedule for a community food drive
+Response:
+- Permit Applications: 10 days
+- Venue Booking: 7 days
+- Initial Announcements: 5 days
+- Volunteer Recruitment: 5 days
+- Social Media Campaign: 4 days
+- Donation Collection: 4 days
+- Equipment Setup: 2 days
+- Event Day: 1 day
 """
 
 system_prompt = (
@@ -191,6 +218,21 @@ def resources_node(state: State) -> Command[Literal["Supervisor"]]:
         goto="Supervisor",
     )
 
+schedule_agent = create_react_agent(
+    llm, tools=[schedule_tool], prompt=schedule_prompt
+)
+
+def schedule_node(state: State) -> Command[Literal["Supervisor"]]:
+    result = schedule_agent.invoke(state)
+    return Command(
+        update={
+            "messages": [
+                HumanMessage(content=result["messages"][-1].content, name="Schedule")
+            ]
+        },
+        goto="Supervisor",
+    )
+
 def supervisor_node(state: State) -> Command[Literal[*members, "__end__"]]:
     messages = [
         {"role": "system", "content": system_prompt},
@@ -210,6 +252,7 @@ def initialize_graph():
     builder.add_node("Resources", resources_node)
     builder.add_node("Social_Outreach", outreach_social_node)
     builder.add_node("Volunteer_Outreach", outreach_volunteer_node)
+    builder.add_node("Schedule", schedule_node)
 
     builder.set_entry_point("Supervisor")
     return builder.compile()
