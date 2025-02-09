@@ -12,7 +12,8 @@ import {
   DollarSign, 
   Users, 
   PartyPopper,
-  CheckCircle2
+  CheckCircle2,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from 'react-router-dom';
@@ -56,6 +57,8 @@ const Chatpage = () => {
   const progress = (completedFields.size / 5) * 100;
 
   const navigate = useNavigate();
+
+  const [isCreating, setIsCreating] = useState(false);
 
   // Extract event details from user input
   const extractEventDetails = (message: string): boolean => {
@@ -192,6 +195,7 @@ const Chatpage = () => {
   const isAllCompleted = completedFields.size === 5;
 
   const handleCreateEvent = async () => {
+    setIsCreating(true);
     try {
       const response = await fetch('http://localhost:5001/create-event', {
         method: 'POST',
@@ -245,6 +249,8 @@ const Chatpage = () => {
           timestamp: new Date()
         }
       ]);
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -324,12 +330,21 @@ const Chatpage = () => {
                   ? "bg-green-500 hover:bg-green-600 text-white shadow-lg shadow-green-500/20" 
                   : "bg-neutral-800 text-neutral-400 cursor-not-allowed hover:bg-neutral-800"
               )}
-              disabled={!isAllCompleted}
+              disabled={!isAllCompleted || isCreating}
               onClick={handleCreateEvent}
             >
               <span className="flex items-center gap-1.5">
-                {isAllCompleted && <CheckCircle2 className="w-3.5 h-3.5" />}
-                {isAllCompleted ? 'Generate Event Plan' : 'Complete All Details'}
+                {isCreating ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Creating Event...
+                  </>
+                ) : (
+                  <>
+                    {isAllCompleted && <CheckCircle2 className="w-3.5 h-3.5" />}
+                    {isAllCompleted ? 'Generate Event Plan' : 'Complete All Details'}
+                  </>
+                )}
               </span>
             </Button>
           </CardFooter>
