@@ -15,12 +15,14 @@ from .resource_search_tool import SearchTool
 from .outreach_social_tool import OutreachSocialTool
 from .agent_permit import PermitSearchTool
 from .schedule_tool import ScheduleTool
+from .budget_tool import BudgetTool
 
 resourse_search_tool = SearchTool()
 outreach_social_tool = OutreachSocialTool()
 schedule_tool = ScheduleTool()
+budget_tool = BudgetTool()
 
-members = ["Resources", "Social_Outreach", "Volunteer_Outreach", "Schedule", "Permits"]
+members = ["Budget", "Resources", "Social_Outreach", "Volunteer_Outreach", "Schedule", "Permits"]
 options = members + ["FINISH"]
 
 # Our team supervisor is an LLM node. It just picks the next agent to process
@@ -154,6 +156,30 @@ permit_prompt = (
     "- Temporary Event Permit: Authorizes use of public space for the event.\n"
 )
 
+budget_prompt = """You are an expert budget planning assistant specializing in all types of events. When a user asks about budget allocation:
+
+1. Use the calculate_budget_breakdown tool to get the budget amount and event type
+2. Based on the event type, first determine ALL relevant budget categories that would be needed. Consider:
+   - The specific nature and purpose of the event
+   - Standard requirements for this type of event
+   - Special equipment or resources typically needed
+   - Both essential and optional components
+   
+3. For each identified category:
+   - Assign an appropriate percentage based on importance and typical costs
+   - Calculate the actual dollar amount
+
+4. Your response should:
+   - List all relevant budget categories specific to the event type
+   - Show percentage and dollar amount for each category
+   - Ensure percentages sum to exactly 100%
+   - Group related items logically
+
+Remember that categories should be specifically tailored to the exact event type provided, not using generic templates.
+Only output the answer, no other text.
+If you need any clarification about the event type or special requirements, ask the user.
+"""
+
 prompt = ChatPromptTemplate.from_messages(
     [
         ("system", system_prompt),
@@ -270,6 +296,23 @@ def permit_node(state: dict) -> Command[str]:
         goto="Supervisor",
     )
 
+budget_agent = create_react_agent(
+    llm,
+    tools=[budget_tool],
+    prompt=budget_prompt
+)
+
+def budget_node(state: State) -> Command[Literal["Supervisor"]]:
+    result = budget_agent.invoke(state)
+    return Command(
+        update={
+            "messages": [
+                HumanMessage(content=result["messages"][-1].content, name="Budget")
+            ]
+        },
+        goto="Supervisor",
+    )
+
 def supervisor_node(state: State) -> Command[Literal[*members, "__end__"]]:
     messages = [
         {"role": "system", "content": system_prompt},
@@ -291,6 +334,7 @@ def initialize_graph():
     builder.add_node("Volunteer_Outreach", outreach_volunteer_node)
     builder.add_node("Schedule", schedule_node)
     builder.add_node("Permits", permit_node)
+    builder.add_node("Budget", budget_node)
     builder.set_entry_point("Supervisor")
     return builder.compile()
 
