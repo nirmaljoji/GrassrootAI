@@ -2,7 +2,7 @@ import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
 import "./App.css";
 import { Route, Routes } from "react-router";
-import DetailsView from "./pages/DetailsView";
+import NewDetailsView from "./pages/NewDetailsView";
 import Chatpage from "./pages/Chatpage";
 
 const App = () => {
@@ -11,7 +11,7 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/chat" element={<Chatpage />} />
-        <Route path="/details/:eventId" element={<DetailsView />} />
+        <Route path="/details/:eventId" element={<NewDetailsView />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </div>

@@ -1,0 +1,11 @@
+/* Add these styles to override the white background in expanded sections */
+.bg-neutral-800 [data-state="closed"],
+.bg-neutral-800 [data-state="open"],
+.bg-neutral-800 [data-state="closed"] > div,
+.bg-neutral-800 [data-state="open"] > div,
+.bg-neutral-800 .p-4,
+.bg-neutral-800 .shadow,
+.bg-neutral-800 .rounded {
+  background-color: rgb(38 38 38) !important; /* bg-neutral-800 */
+  color: white !important;
+} 
