@@ -1,19 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 
 interface SocialMediaItem {
   type: "facebook" | "x" | "instagram";
-  title: string;
+  group_name: string;
   completed: boolean;
 }
 
-const initialSocialMediaItems: SocialMediaItem[] = [
-  { type: "facebook", title: "Dogs friends group", completed: false },
-  { type: "x", title: "Dogs friends group", completed: true },
-  { type: "instagram", title: "Dogs friends group", completed: false },
-];
+interface SocialMediaProps {
+  eventId?: string;
+}
 
 const getSocialIcon = (type: string) => {
   switch (type.toLowerCase()) {
@@ -59,18 +57,37 @@ const getSocialIcon = (type: string) => {
   }
 };
 
-const SocialMediaRow: React.FC<{ item: SocialMediaItem }> = ({ item }) => {
+const SocialMediaRow: React.FC<{ item: SocialMediaItem; eventId?: string }> = ({ item, eventId }) => {
   const [completed, setCompleted] = useState(item.completed);
   const [loading, setLoading] = useState(false);
 
-  const handlePost = () => {
+  const handlePost = async () => {
     if (!completed && !loading) {
       setLoading(true);
-      // simulate an API call or some delay
-      setTimeout(() => {
+      try {
+        const response = await fetch('http://localhost:5001/social_outreach', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            eventId,
+            type: item.type,
+            group_name: item.group_name
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to post to social media');
+        }
+
         setCompleted(true);
+      } catch (error) {
+        console.error('Error posting to social media:', error);
+        // Optionally show an error message to the user
+      } finally {
         setLoading(false);
-      }, 1500);
+      }
     }
   };
 
@@ -78,7 +95,7 @@ const SocialMediaRow: React.FC<{ item: SocialMediaItem }> = ({ item }) => {
     <li className="flex items-center justify-between py-3 border-b last:border-b-0">
       <div className="flex items-center">
         {getSocialIcon(item.type)}
-        <span className="font-medium">{item.title}</span>
+        <span className="font-medium">{item.group_name}</span>
       </div>
       <div>
         {completed ? (
@@ -111,7 +128,55 @@ const SocialMediaRow: React.FC<{ item: SocialMediaItem }> = ({ item }) => {
   );
 };
 
-const SocialMedia: React.FC = () => {
+const SocialMedia: React.FC<SocialMediaProps> = ({ eventId }) => {
+  const [socialMediaItems, setSocialMediaItems] = useState<SocialMediaItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSocialMedia = async () => {
+      try {
+        const response = await fetch('http://localhost:5001/social_outreach', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ eventId }),
+        });
+        
+        const data = await response.json();
+        
+        // Transform the data and set default type if not available
+        const transformedData = data.map((item: any) => ({
+          type: (item.type?.toLowerCase() || 'facebook') as "facebook" | "x" | "instagram",
+          title: item.title,
+          completed: item.completed || false,
+        }));
+        
+        setSocialMediaItems(transformedData);
+      } catch (error) {
+        console.error('Error fetching social media items:', error);
+        setSocialMediaItems([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSocialMedia();
+  }, [eventId]);
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Social Media</CardTitle>
+        </CardHeader>
+        <CardContent className="flex justify-center py-8">
+          <Spinner className="h-6 w-6" />
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -119,8 +184,8 @@ const SocialMedia: React.FC = () => {
       </CardHeader>
       <CardContent>
         <ul className="divide-y divide-gray-100">
-          {initialSocialMediaItems.map((item, index) => (
-            <SocialMediaRow key={index} item={item} />
+          {socialMediaItems.map((item, index) => (
+            <SocialMediaRow key={index} item={item} eventId={eventId} />
           ))}
         </ul>
       </CardContent>
