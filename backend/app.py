@@ -1,4 +1,4 @@
-from flask import Flask, request, Response
+from flask import Flask, request, Response, jsonify
 from flask_cors import CORS
 import openai
 from dotenv import load_dotenv
@@ -9,6 +9,7 @@ from agents.agents_framework import process_user_message
 from langchain_core.messages import HumanMessage
 from bson import ObjectId
 from datetime import datetime
+import json
 
 
 load_dotenv()
@@ -89,6 +90,24 @@ def chat():
                 yield chunk["choices"][0]["content"]
     
     return Response(generate(), content_type="text/plain")
+
+
+@app.route("/resources", methods=["POST"])
+def resources():
+    # Make an api call to mongodb and get all the resources and return them
+    data = request.get_json() or {}
+    event_id = data.get("eventId")
+    
+    if not event_id:
+        return jsonify({"error": "Missing eventId in request body"}), 400
+        
+    result = []
+    
+    for resource in client['sanctuary']['resources'].find({}):
+        print(resource)
+        resource["_id"] = str(resource["_id"])
+        result.append(resource)
+    return Response(json.dumps(result), content_type="application/json")
 
 @app.route("/agent", methods=["POST"])
 def agent():
