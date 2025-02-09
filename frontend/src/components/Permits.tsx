@@ -1,4 +1,8 @@
 import React, { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Loader2, ChevronRight, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Permit {
   id: number;
@@ -31,51 +35,46 @@ const Permits: React.FC<PermitsProps> = ({ permits }) => {
   };
 
   return (
-    <div className="p-4 bg-white shadow rounded">
-      <h2 className="text-xl font-bold mb-4">Permits</h2>
-      <ul className="space-y-2">
-        {localPermits.map(permit => (
-          <li
-            key={permit.id}
-            className="flex items-center justify-between border p-2 rounded"
-          >
-            <span>{permit.text}</span>
-            <button
-              className="w-8 h-8 rounded-full border flex items-center justify-center"
-              onClick={() => handlePermitClick(permit.id)}
-              disabled={permit.completed || updatingPermitId === permit.id}
-            >
-              {updatingPermitId === permit.id ? (
-                <svg
-                  className="animate-spin h-5 w-5 text-gray-500"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                  ></path>
-                </svg>
-              ) : permit.completed ? (
-                "✔️"
-              ) : (
-                "➡️"
+    <Card>
+      <CardHeader>
+        <CardTitle>Permits</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ul className="space-y-2">
+          {localPermits.map(permit => (
+            <li
+              key={permit.id}
+              className={cn(
+                "flex items-center justify-between p-3 rounded-lg border",
+                permit.completed && "bg-muted"
               )}
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
+            >
+              <span className={cn(
+                "text-sm",
+                permit.completed && "text-muted-foreground line-through"
+              )}>
+                {permit.text}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => handlePermitClick(permit.id)}
+                disabled={permit.completed || updatingPermitId === permit.id}
+                className="h-8 w-8 rounded-full"
+              >
+                {updatingPermitId === permit.id ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : permit.completed ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+              </Button>
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
   );
 };
 

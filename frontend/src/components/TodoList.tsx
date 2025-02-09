@@ -18,7 +18,7 @@ interface TodoListProps {
 
 const TodoList: React.FC<TodoListProps> = ({ listName, eventId }) => {
   const [todos, setTodos] = useState<Task[]>([]);
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
   // Fetch todos from the API when the component mounts or listName changes
   useEffect(() => {

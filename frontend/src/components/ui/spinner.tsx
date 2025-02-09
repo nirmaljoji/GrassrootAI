@@ -1,47 +1,29 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { VariantProps, cva } from 'class-variance-authority';
-import { Loader2 } from 'lucide-react';
 
-const spinnerVariants = cva('flex-col items-center justify-center', {
-  variants: {
-    show: {
-      true: 'flex',
-      false: 'hidden',
-    },
-  },
-  defaultVariants: {
-    show: true,
-  },
-});
+interface SpinnerProps extends React.HTMLAttributes<HTMLDivElement> { }
 
-const loaderVariants = cva('animate-spin text-primary', {
-  variants: {
-    size: {
-      small: 'size-6',
-      medium: 'size-8',
-      large: 'size-12',
-    },
-  },
-  defaultVariants: {
-    size: 'medium',
-  },
-});
-
-interface SpinnerContentProps
-  extends VariantProps<typeof spinnerVariants>,
-    VariantProps<typeof loaderVariants> {
-  className?: string;
-  children?: React.ReactNode;
-}
-
-const Spinner = ({ size, show, children, className }: SpinnerContentProps) => {
+const Spinner = ({ className, ...props }: SpinnerProps) => {
   return (
-    <span className={spinnerVariants({ show })}>
-      <Loader2 className={cn(loaderVariants({ size }), className)} />
-      {children}
-    </span>
+    <div
+      className={cn("animate-spin", className)}
+      {...props}
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+      </svg>
+    </div>
   );
 }
 
-export {Spinner}
+export { Spinner }

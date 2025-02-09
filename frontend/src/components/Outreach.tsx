@@ -3,6 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { X } from 'lucide-react';
 
 interface OutreachProps {
   defaultText: string;
@@ -47,59 +50,69 @@ const Outreach: React.FC<OutreachProps> = ({ defaultText }) => {
   };
 
   return (
-    <div className="p-4 bg-white shadow rounded space-y-4">
-      <h2 className="text-xl font-bold mb-2">Outreach</h2>
-      <div className="space-y-2">
-        <Input
-          placeholder="Enter recipient email and press Enter..."
-          value={newEmail}
-          onChange={(e) => setNewEmail(e.target.value)}
-          onKeyDown={handleEmailKeyDown}
-          className="w-full"
-        />
-        <div className="flex flex-wrap gap-2">
-          {emailAddresses.map((email, index) => (
-            <Badge key={index} className="rounded-full flex items-center">
-              {email}
-              <button
-                onClick={() => removeEmail(index)}
-                className="ml-1 text-xs text-gray-200 hover:text-red-500 focus:outline-none"
-                aria-label={`Remove ${email}`}
-              >
-                ×
-              </button>
-            </Badge>
-          ))}
+    <Card>
+      <CardHeader>
+        <CardTitle>Outreach</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="space-y-2">
+          <Label htmlFor="emails">Recipients</Label>
+          <Input
+            id="emails"
+            placeholder="Enter recipient email and press Enter..."
+            value={newEmail}
+            onChange={(e) => setNewEmail(e.target.value)}
+            onKeyDown={handleEmailKeyDown}
+          />
+          {emailAddresses.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {emailAddresses.map((email, index) => (
+                <Badge 
+                  key={index} 
+                  variant="secondary"
+                  className="px-3 py-1.5 flex items-center gap-2 text-sm"
+                >
+                  {email}
+                  <button
+                    onClick={() => removeEmail(index)}
+                    className="hover:text-destructive focus:outline-none"
+                    aria-label={`Remove ${email}`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
-      </div>
 
-      {/* Added Subject Title Input */}
-      <div className="mt-4">
-        <label htmlFor="subject" className="block mb-1 text-sm font-medium">
-          Subject Title
-        </label>
-        <Input
-          id="subject"
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-          placeholder="Enter subject title..."
-          className="w-full p-2 border border-gray-300 rounded"
-        />
-      </div>
+        <div className="space-y-2">
+          <Label htmlFor="subject">Subject</Label>
+          <Input
+            id="subject"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            placeholder="Enter subject title..."
+          />
+        </div>
 
-      <Textarea
-        ref={textAreaRef as React.Ref<HTMLTextAreaElement>}
-        value={emailBody}
-        onChange={handleTextAreaChange}
-        placeholder="Enter email content..."
-        className="w-full p-2 border border-gray-300 rounded resize-none overflow-hidden mt-4"
-      />
-      <div className="mt-4">
+        <div className="space-y-2">
+          <Label htmlFor="message">Message</Label>
+          <Textarea
+            id="message"
+            ref={textAreaRef as React.Ref<HTMLTextAreaElement>}
+            value={emailBody}
+            onChange={handleTextAreaChange}
+            placeholder="Enter email content..."
+            className="resize-none overflow-hidden min-h-[200px]"
+          />
+        </div>
+
         <Button onClick={handleSend} className="w-full">
-          Send
+          Send Email
         </Button>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

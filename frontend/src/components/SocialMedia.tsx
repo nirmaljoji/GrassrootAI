@@ -1,4 +1,7 @@
 import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
 
 interface SocialMediaItem {
   type: "facebook" | "x" | "instagram";
@@ -72,33 +75,36 @@ const SocialMediaRow: React.FC<{ item: SocialMediaItem }> = ({ item }) => {
   };
 
   return (
-    <li className="flex items-center justify-between mb-2">
+    <li className="flex items-center justify-between py-3 border-b last:border-b-0">
       <div className="flex items-center">
         {getSocialIcon(item.type)}
-        <span className="font-bold capitalize"></span> {item.title}
+        <span className="font-medium">{item.title}</span>
       </div>
       <div>
         {completed ? (
-          <button
-            className="px-3 py-1 bg-gray-300 text-gray-700 cursor-default rounded"
-            disabled
-          >
+          <Button variant="ghost" disabled className="text-green-600">
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
             Done
-          </button>
+          </Button>
         ) : loading ? (
-          <button
-            className="px-3 py-1 bg-blue-500 text-white rounded flex items-center"
-            disabled
-          >
-            <span className="animate-spin">⏳</span>
-          </button>
+          <Button disabled>
+            <Spinner className="mr-2 h-4 w-4" />
+            Posting...
+          </Button>
         ) : (
-          <button
-            className="px-3 py-1 bg-blue-500 text-white rounded flex items-center hover:bg-blue-600"
-            onClick={handlePost}
-          >
-            Post
-          </button>
+          <Button onClick={handlePost}>Post</Button>
         )}
       </div>
     </li>
@@ -107,14 +113,18 @@ const SocialMediaRow: React.FC<{ item: SocialMediaItem }> = ({ item }) => {
 
 const SocialMedia: React.FC = () => {
   return (
-    <div className="p-4 bg-white shadow rounded">
-      <h1 className="text-2xl font-bold mb-4">SocialMedia</h1>
-      <ul className="list-disc pl-5">
-        {initialSocialMediaItems.map((item, index) => (
-          <SocialMediaRow key={index} item={item} />
-        ))}
-      </ul>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Social Media</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ul className="divide-y divide-gray-100">
+          {initialSocialMediaItems.map((item, index) => (
+            <SocialMediaRow key={index} item={item} />
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
   );
 };
 
