@@ -2,6 +2,7 @@ import React from 'react';
 import TodoList from '../components/TodoList';
 import Permits from '@/components/Permits';
 import SocialMedia from '@/components/SocialMedia';
+import Outreach from '@/components/Outreach';
 
 const permits = [
   { id: 1, text: 'Permit 1', completed: false },
@@ -21,6 +22,7 @@ const DetailsView: React.FC = () => {
                 <TodoList listName='Resources'/>
                 <Permits permits={permits}/>
                 <SocialMedia />
+                <Outreach defaultText={''} />
             </div>
         </div>
     );
