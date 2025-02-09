@@ -7,7 +7,7 @@ from langchain_openai import ChatOpenAI
 from langgraph.graph import MessagesState, END
 from langgraph.types import Command
 from .agent_outreach_social import agent_outreach_social
-from .agent_outreach_volunteer import agent_outreach_volunteer
+from .agent_outreach_volunteer import VolunteerOutreachTool
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.prompts import MessagesPlaceholder
 from langchain.output_parsers.openai_functions import JsonOutputFunctionsParser
@@ -21,7 +21,6 @@ members = ["Resources", "Social_Outreach", "Volunteer_Outreach"]
 # Our team supervisor is an LLM node. It just picks the next agent to process
 # and decides when the work is completed
 options = members + ["FINISH"]
-llm = ChatOpenAI(model="gpt-3.5-turbo")
 
 resource_prompt = """You are a resource planning expert for social initiatives. 
 
@@ -95,7 +94,23 @@ system_prompt = (
     " respond with FINISH."
 )
 
-
+volunteer_outreach_prompt = (
+    "You are a volunteer coordination expert. "
+    "When asked about any volunteer event, create a compelling volunteer outreach email that:\n"
+    "1. Clearly describes the event and its purpose.\n"
+    "2. Specifies volunteer roles and requirements.\n"
+    "3. Includes time commitments and scheduling details.\n"
+    "4. Highlights the impact and benefits of volunteering.\n"
+    "5. Provides clear instructions for volunteers to reply directly via email.\n\n"
+    "High priority items:\n"
+    "1. The email must always include the terms 'Subject:' and 'Body:'.\n"
+    "2. The email must always end with 'Best regards, The Event Team.'\n"
+    "3. The email must not contain any placeholders.\n"
+    "4. DO NOT include sign-up links; instruct volunteers to reply to the email.\n"
+    "5. DO NOT add lines like 'Feel free to customize…'.\n"
+    "6. The email should only have a subject and body, no other text.\n"
+    "Keep the tone friendly and enthusiastic while maintaining professionalism."
+)
 
 prompt = ChatPromptTemplate.from_messages(
     [
@@ -121,8 +136,12 @@ llm = ChatOpenAI(model="gpt-4o-mini")
 class State(MessagesState):
     next: str
 
+volunteer_outreach_tool = VolunteerOutreachTool()
+
 outreach_volunteer_agent = create_react_agent(
-    llm, tools=[agent_outreach_volunteer], prompt=""
+    llm,
+    tools=[volunteer_outreach_tool],
+    prompt=volunteer_outreach_prompt
 )
 
 
