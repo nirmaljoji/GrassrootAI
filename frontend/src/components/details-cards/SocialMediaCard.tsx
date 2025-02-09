@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Share2, Facebook, Instagram, Twitter, Linkedin, Send } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,29 +7,94 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from "@/components/ui/accordion";
+import { useParams } from 'react-router';
 
-const socialMediaData = {
-  facebook: {
-    groups: [
-      "Tech Enthusiasts Singapore",
-      "Digital Events SG",
-      "Singapore Tech Community",
-      "IT Professionals Network",
-      "Tech Conference Group"
-    ]
-  },
-  instagram: {
-    sampleMessage: "Join us for the biggest tech conference of 2024! 🚀 #TechConf2024 #Innovation"
-  },
-  twitter: {
-    tweet: "Excited to announce our keynote speakers for #TechConf2024! Stay tuned for more updates. 🎯"
-  },
-  linkedin: {
-    message: "We're bringing together industry leaders and innovators for an unprecedented tech conference experience."
-  }
-};
+interface SocialOutreachGroup {
+  id: string;
+  group_name: string;
+  event_id: string;
+}
+
+
 
 const SocialMediaCard = () => {
+  const [event, setEvent] = useState("tech");
+
+  const defaultSocialMediaData = {
+    facebook: {
+      groups: [] as string[]
+    },
+    instagram: {
+      sampleMessage: `Join us for the biggest ${event} conference of 2024! 🚀 #TechConf2024 #Innovation`
+    },
+    twitter: {
+      tweet: "Excited to announce our keynote speakers for #TechConf2024! Stay tuned for more updates. 🎯"
+    },
+    linkedin: {
+      message: "We're bringing together industry leaders and innovators for an unprecedented tech conference experience."
+    }
+  };
+
+  const [socialMediaData, setSocialMediaData] = useState(defaultSocialMediaData);
+
+  const { eventId } = useParams();
+
+  useEffect(() => {
+    const fetchEvent = async () => {
+      try {
+        const response = await fetch(`http://localhost:5001/events?eventId=${eventId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+
+        if (!response.ok) { throw new Error('Failed to fetch events data'); }
+        const data: { event_name: string }[] = await response.json();
+        console.log(data[0].event_name);
+        setEvent(data[0].event_name);
+      } catch (error) {
+        console.error('Error fetching events data:', error);
+      }
+    }
+    if (eventId) {
+      fetchEvent();
+    }
+  }, [eventId]);
+
+
+  useEffect(() => {
+    const fetchSocialOutreach = async () => {
+      try {
+        const response = await fetch('http://localhost:5001/social_outreach', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ eventId }),
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch social outreach data');
+
+        const data: SocialOutreachGroup[] = await response.json();
+
+        setSocialMediaData(prev => ({
+          ...prev,
+          facebook: {
+            groups: data.map(item => item.group_name)
+          }
+        }));
+      } catch (error) {
+        console.error('Error fetching social outreach data:', error);
+      }
+    };
+
+    if (eventId) {
+      fetchSocialOutreach();
+    }
+    console.log(eventId);
+  }, [eventId]);
+
   return (
     <AccordionItem value="social" className="border rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 bg-white overflow-hidden z-10">
       <Card className="p-0">
@@ -42,7 +107,7 @@ const SocialMediaCard = () => {
         <AccordionContent className="px-6 pb-4">
           <div className="space-y-6 pt-2">
             <p className="text-gray-600">Manage your social media campaigns and posts.</p>
-            
+
             {/* First Row */}
             <div className="grid grid-cols-2 gap-4">
               {/* Facebook Card */}
@@ -52,7 +117,7 @@ const SocialMediaCard = () => {
                   <h3 className="font-semibold text-blue-900">Facebook Groups</h3>
                 </div>
                 <div className="space-y-2">
-                  {socialMediaData.facebook.groups.map((group, index) => (
+                  {socialMediaData.facebook.groups.slice(0, 5).map((group, index) => (
                     <div key={index} className="text-sm text-blue-800 bg-blue-200/50 p-2 rounded">
                       {group}
                     </div>
@@ -68,7 +133,7 @@ const SocialMediaCard = () => {
                 </div>
                 <div className="space-y-3">
                   <p className="text-sm text-pink-800 bg-pink-200/50 p-3 rounded">
-                    {socialMediaData.instagram.sampleMessage}
+                    {`Join us for the biggest ${event} of 2025! 🚀 #Social #Impact`}
                   </p>
                   <Button className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600">
                     <Send className="h-4 w-4 mr-2" /> Create Post
@@ -87,7 +152,7 @@ const SocialMediaCard = () => {
                 </div>
                 <div className="space-y-3">
                   <p className="text-sm text-neutral-800 bg-neutral-200/50 p-3 rounded">
-                    {socialMediaData.twitter.tweet}
+                    {`Join us for the biggest ${event} of 2025! 🚀 #Social #Impact`}
                   </p>
                   <Button variant="outline" className="w-full border-neutral-900 text-neutral-900 hover:bg-neutral-200">
                     <Send className="h-4 w-4 mr-2" /> Post Tweet
@@ -103,7 +168,7 @@ const SocialMediaCard = () => {
                 </div>
                 <div className="space-y-3">
                   <p className="text-sm text-blue-800 bg-blue-200/50 p-3 rounded">
-                    {socialMediaData.linkedin.message}
+                    {`Join us for the biggest ${event} of 2025! 🚀 #Social #Impact`}
                   </p>
                   <Button className="w-full bg-blue-700 hover:bg-blue-800">
                     <Send className="h-4 w-4 mr-2" /> Share Post
@@ -118,4 +183,4 @@ const SocialMediaCard = () => {
   );
 };
 
-export default SocialMediaCard; 
+export default SocialMediaCard;
