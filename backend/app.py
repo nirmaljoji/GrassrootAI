@@ -166,9 +166,50 @@ def events():
         result.append(resource)
     return Response(json.dumps(result, cls=JSONEncoder), content_type="application/json")
 
+@app.route("/create-event", methods=["POST"])
+def create_event():
+    data = request.get_json()
+    
+    # Validate required fields
+    required_fields = ['event_name', 'location', 'budget', 'attendees', 'date']
+    if not all(field in data for field in required_fields):
+        return jsonify({
+            "error": "Missing required fields. Please provide event_name, location, budget, attendees, and date"
+        }), 400
+    
+    try:
+        # Generate event_id
+        event_id = str(ObjectId())
+        
+        # Create event document
+        event = {
+            'event_id': event_id,  # Add the event_id field
+            'event_name': data['event_name'],
+            'location': data['location'],
+            'budget': float(data['budget']),  # Convert to float in case it's sent as string
+            'attendees': int(data['attendees']),  # Convert to int in case it's sent as string
+            'date': data['date'],
+            'created_at': datetime.utcnow()
+        }
+        
+        # Insert into MongoDB
+        result = client['sanctuary']['events'].insert_one(event)
+        
+        # Return both MongoDB _id and our event_id
+        return jsonify({
+            "success": True,
+            "event_id": event_id,
+        }), 201
+        
+    except Exception as e:
+        return jsonify({
+            "error": f"Failed to create event: {str(e)}"
+        }), 500
+
 @app.route("/agent", methods=["POST"])
 def agent():
     user_message = request.json.get("message")
+    event_id = request.json.get("event_id")
     
     def generate():
         # We assume process_user_message() returns a list of responses
@@ -176,19 +217,19 @@ def agent():
         social_outreach_items = []
         resource_items = []
         volunteer_email_items = [] 
-        event_id = None
+        # event_id = None
 
         for response in responses:
             response_str = str(response)
 
             # Create event entry first if it doesn't exist
-            if not event_id and ("'Social_Outreach'" in response_str or "'Resources'" in response_str or "'Volunteer_Outreach'" in response_str):
-                event_id = str(ObjectId())
-                events_collection = client['sanctuary']['events']
-                events_collection.insert_one({
-                    'event_id': event_id,
-                    'created_at': datetime.utcnow()
-                })
+            # if not event_id and ("'Social_Outreach'" in response_str or "'Resources'" in response_str):
+            #     event_id = request.json.get("event_id")
+            #     events_collection = client['sanctuary']['events']
+            #     events_collection.insert_one({
+            #         'event_id': event_id,
+            #         'created_at': datetime.utcnow()
+            #     })
 
             # Check if 'Social_Outreach' is mentioned in the response
             if "'Social_Outreach'" in response_str:
