@@ -22,8 +22,6 @@ MONGODB_URI = os.environ['MONGODB_URI']
 print(MONGODB_URI)
 
 client = MongoClient(MONGODB_URI)
-db = client['events_db']
-events_collection = db['events']
 
 for db_info in client.list_database_names():
         print(db_info)
@@ -177,13 +175,14 @@ def agent():
         responses = process_user_message(user_message)
         social_outreach_items = []
         resource_items = []
+        volunteer_email_items = [] 
         event_id = None
 
         for response in responses:
             response_str = str(response)
 
             # Create event entry first if it doesn't exist
-            if not event_id and ("'Social_Outreach'" in response_str or "'Resources'" in response_str):
+            if not event_id and ("'Social_Outreach'" in response_str or "'Resources'" in response_str or "'Volunteer_Outreach'" in response_str):
                 event_id = str(ObjectId())
                 events_collection = client['sanctuary']['events']
                 events_collection.insert_one({
@@ -208,8 +207,6 @@ def agent():
                     # Remove any empty strings that might result from the cleaning
                     social_outreach_items = [item for item in social_outreach_items if item.strip()]
 
-                    # Generate a unique event ID
-                    event_id = str(ObjectId())
                     social_outreach_collection = client['sanctuary']['social_outreach']
 
                     # Store each group as a separate row/document in MongoDB
@@ -236,9 +233,6 @@ def agent():
                     # Remove any empty strings that might result from the cleaning
                     resource_items = [item for item in resource_items if item.strip()]
 
-                    # Use the same event ID as social outreach
-                    if not event_id:
-                        event_id = str(ObjectId())
                     resources_collection = client['sanctuary']['resources']
 
                     # Store each resource as a separate row/document in MongoDB
@@ -248,9 +242,33 @@ def agent():
                             'resource': resource
                         })
 
+            # Process Volunteer Outreach (only once)
+            if "'Volunteer_Outreach'" in response_str:
+                match = re.search(r"content='(.+?)'", response_str, re.DOTALL)
+                if match:
+                    raw_content = match.group(1)
+                    
+                    subject_match = re.search(r"Subject:\s*(.*?)\s*Body:", raw_content, re.DOTALL)
+                    print("Subject Match:   ", subject_match)
+                    body_match = re.search(r"Body:\s*(.*?)(?=\s*Best regards,\s*The Event Team\.?)", raw_content, re.DOTALL)
+                    print("Body Match:   ", body_match)
+                    subject = subject_match.group(1).strip() if subject_match else ""
+                    body = (body_match.group(1).strip() + "\nBest regards, The Event Team.") if body_match else ""
+                    
+                    volunteer_outreach_collection = client['sanctuary']['volunteer_outreach']
+                    volunteer_outreach_collection.insert_one({
+                        'event_id': event_id,
+                        'subject': subject,
+                        'body': body
+                    })
+                    volunteer_email_items = {
+                        'subject': subject,
+                        'body': body
+                    }
+
             yield response_str + "\n----\n"
         
-        # After all responses, display both social outreach items and resources
+        # After processing all responses, display the outputs.
         if social_outreach_items and event_id:
             yield "\n*Social Outreach Groups*:\n"
             for group in social_outreach_items:
@@ -260,6 +278,11 @@ def agent():
             yield "\n*Required Resources*:\n"
             for resource in resource_items:
                 yield f"- {resource}\n"
+
+        if volunteer_email_items and event_id:
+            yield "\n*Volunteer Outreach Email*:\n"
+            yield f"Subject: {volunteer_email_items['subject']}\n"
+            yield f"Body: {volunteer_email_items['body']}\n"
 
         if event_id:
             yield f"\n*Event ID*: {event_id}\n"
