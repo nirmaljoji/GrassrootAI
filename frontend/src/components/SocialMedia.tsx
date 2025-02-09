@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 
-interface OutreachItem {
+interface SocialMediaItem {
   type: "facebook" | "x" | "instagram";
   title: string;
   completed: boolean;
 }
 
-const initialOutreachItems: OutreachItem[] = [
+const initialSocialMediaItems: SocialMediaItem[] = [
   { type: "facebook", title: "Dogs friends group", completed: false },
   { type: "x", title: "Dogs friends group", completed: true },
   { type: "instagram", title: "Dogs friends group", completed: false },
@@ -56,7 +56,7 @@ const getSocialIcon = (type: string) => {
   }
 };
 
-const OutreachRow: React.FC<{ item: OutreachItem }> = ({ item }) => {
+const SocialMediaRow: React.FC<{ item: SocialMediaItem }> = ({ item }) => {
   const [completed, setCompleted] = useState(item.completed);
   const [loading, setLoading] = useState(false);
 
@@ -105,17 +105,17 @@ const OutreachRow: React.FC<{ item: OutreachItem }> = ({ item }) => {
   );
 };
 
-const Outreach: React.FC = () => {
+const SocialMedia: React.FC = () => {
   return (
     <div className="p-4 bg-white shadow rounded">
-      <h1 className="text-2xl font-bold mb-4">Outreach</h1>
+      <h1 className="text-2xl font-bold mb-4">SocialMedia</h1>
       <ul className="list-disc pl-5">
-        {initialOutreachItems.map((item, index) => (
-          <OutreachRow key={index} item={item} />
+        {initialSocialMediaItems.map((item, index) => (
+          <SocialMediaRow key={index} item={item} />
         ))}
       </ul>
     </div>
   );
 };
 
-export default Outreach;
+export default SocialMedia;

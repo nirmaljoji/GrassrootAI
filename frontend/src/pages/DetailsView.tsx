@@ -1,7 +1,7 @@
 import React from 'react';
 import TodoList from '../components/TodoList';
 import Permits from '@/components/Permits';
-import Outreach from '@/components/Outreach';
+import SocialMedia from '@/components/SocialMedia';
 
 const permits = [
   { id: 1, text: 'Permit 1', completed: false },
@@ -22,10 +22,8 @@ const DetailsView: React.FC = () => {
                 <h2 className="text-xl font-bold mb-4">Column 2</h2>
                 <p>Content for the second column.</p>
                 <TodoList listName='Resources'/>
-                <TodoList listName='Resources'/>
-                <TodoList listName='Resources'/>
                 <Permits permits={permits}/>
-                <Outreach />
+                <SocialMedia />
                 {/* Add more content here to test independent scrolling */}
             </div>
         </div>
