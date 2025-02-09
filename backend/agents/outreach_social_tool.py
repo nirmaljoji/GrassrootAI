@@ -22,7 +22,7 @@ class OutreachSocialTool(BaseTool):
 
         enhanced_query = f"Can you return the Facebook group names that are relevant to post if i am conducting a {name} camp in {location}. List out only the group names and nothing else"
             
-        print("Using Perplexity" + enhanced_query)
+        print("Using Outreach Search Tool")
 
         perplexity = ChatPerplexity(api_key=os.getenv('PERPLEXITY_API_KEY'), model="sonar-pro")
         response = perplexity.invoke(enhanced_query)

@@ -34,7 +34,7 @@ class PermitSearchTool(BaseTool):
             "For example, if the event is a blood donation drive or food drive, include any health department or "
             "temporary event permits that may be required."
         )
-        print("Using Perplexity for permits: " + query)
+        print("Using Perplexity for permits")
         perplexity = ChatPerplexity(api_key=os.getenv('PERPLEXITY_API_KEY'), model="sonar-pro")
         response = perplexity.invoke(enhanced_query)
         return response.content

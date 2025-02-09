@@ -239,7 +239,7 @@ def outreach_social_node(state: State) -> Command[Literal["Supervisor"]]:
                 HumanMessage(content=result["messages"][-1].content, name="Social_Outreach")
             ]
         },
-        goto="Permits",
+        goto="Supervisor",
     )
 
 
@@ -256,7 +256,7 @@ def resources_node(state: State) -> Command[Literal["Supervisor"]]:
                 HumanMessage(content=result["messages"][-1].content, name="Resources")
             ]
         },
-        goto="Schedule",
+        goto="Supervisor",
     )
 
 schedule_agent = create_react_agent(

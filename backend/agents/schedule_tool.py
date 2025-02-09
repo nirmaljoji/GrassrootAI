@@ -29,7 +29,7 @@ class ScheduleTool(BaseTool):
                                 - Final Preparations: 3 days
                                 - Event Day Setup: 1 day"""
         
-        print("Using Perplexity" + schedule_template)
+        print("Using Perplexity for Scheduling")
 
         perplexity = ChatPerplexity(api_key=os.getenv('PERPLEXITY_API_KEY'), model="sonar-pro")
         response = perplexity.invoke(schedule_template)
