@@ -12,6 +12,7 @@ const Outreach: React.FC<OutreachProps> = ({ defaultText }) => {
   const [emailBody, setEmailBody] = useState(defaultText);
   const [newEmail, setNewEmail] = useState('');
   const [emailAddresses, setEmailAddresses] = useState<string[]>([]);
+  const [subject, setSubject] = useState('');
   const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
@@ -71,12 +72,27 @@ const Outreach: React.FC<OutreachProps> = ({ defaultText }) => {
           ))}
         </div>
       </div>
+
+      {/* Added Subject Title Input */}
+      <div className="mt-4">
+        <label htmlFor="subject" className="block mb-1 text-sm font-medium">
+          Subject Title
+        </label>
+        <Input
+          id="subject"
+          value={subject}
+          onChange={(e) => setSubject(e.target.value)}
+          placeholder="Enter subject title..."
+          className="w-full p-2 border border-gray-300 rounded"
+        />
+      </div>
+
       <Textarea
         ref={textAreaRef as React.Ref<HTMLTextAreaElement>}
         value={emailBody}
         onChange={handleTextAreaChange}
         placeholder="Enter email content..."
-        className="w-full p-2 border border-gray-300 rounded resize-none overflow-hidden"
+        className="w-full p-2 border border-gray-300 rounded resize-none overflow-hidden mt-4"
       />
       <div className="mt-4">
         <Button onClick={handleSend} className="w-full">

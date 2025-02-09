@@ -15,15 +15,14 @@ const DetailsView: React.FC = () => {
   return (
     <div className="grid grid-cols-3 gap-4 p-4 h-screen">
       <div className="col-span-1 bg-gray-100 p-4 space-y-4 h-full overflow-y-auto">
-        <h2 className="text-xl font-bold mb-4">Column 1</h2>
-        <p>Content for the first column.</p>
+        <h2 className="text-xl font-bold mb-4">Title</h2>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean cursus maximus elementum. Cras elementum viverra ex, eu luctus quam vestibulum et. Donec vulputate mollis magna, quis bibendum lectus lobortis vitae.</p>
       </div>
       <div className="col-span-2 bg-gray-200 p-4 space-y-4 h-full overflow-y-auto">
         <h2 className="text-xl font-bold mb-4">
-          Column 2 {eventId && `(Event ID: ${eventId})`}
+          Column 2
         </h2>
         <p>Content for the second column.</p>
-        <h1>Event Id = {eventId ?? ""}</h1>
         <TodoList listName="Resources" eventId={eventId}/>
         <Permits permits={permits} />
         <SocialMedia />
