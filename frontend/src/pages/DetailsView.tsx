@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import TodoList from "../components/TodoList";
 import Permits from "@/components/Permits";
@@ -10,8 +10,46 @@ const permits = [
   { id: 2, text: "Permit 2", completed: false },
 ];
 
+interface OutreachTemplate {
+  event_id: string;
+  subject: string;
+  body: string | null;
+  id: string;
+}
+
 const DetailsView: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
+  const [outreachTemplates, setOutreachTemplates] = useState<OutreachTemplate[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchOutreachTemplates = async () => {
+      try {
+        const response = await fetch('http://localhost:5001/volunteer_outreach', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ eventId }),
+        });
+        const data = await response.json();
+        setOutreachTemplates(data);
+      } catch (error) {
+        console.error('Error fetching outreach templates:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOutreachTemplates();
+  }, [eventId]);
+
+  const handleOutreachComplete = (templateId: string) => {
+    setOutreachTemplates(templates => 
+      templates.filter(template => template.id !== templateId)
+    );
+  };
+
   return (
     <div className="grid grid-cols-3 gap-4 p-4 h-screen">
       <div className="col-span-1 p-4 space-y-4 h-full overflow-y-auto">
@@ -26,7 +64,15 @@ const DetailsView: React.FC = () => {
         <TodoList listName="Resources" eventId={eventId}/>
         <Permits permits={permits} />
         <SocialMedia eventId={eventId} />
-        <Outreach defaultText="" />
+        {outreachTemplates.map((template) => (
+          <Outreach 
+            key={template.id}
+            defaultText={template.subject}
+            defaultSubject={template.subject}
+            templateId={template.id}
+            onComplete={handleOutreachComplete}
+          />
+        ))}
       </div>
     </div>
   );

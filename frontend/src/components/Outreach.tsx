@@ -9,13 +9,16 @@ import { X } from 'lucide-react';
 
 interface OutreachProps {
   defaultText: string;
+  defaultSubject: string;
+  templateId: string;
+  onComplete: (templateId: string) => void;
 }
 
-const Outreach: React.FC<OutreachProps> = ({ defaultText }) => {
+const Outreach: React.FC<OutreachProps> = ({ defaultText, defaultSubject, templateId, onComplete }) => {
   const [emailBody, setEmailBody] = useState(defaultText);
   const [newEmail, setNewEmail] = useState('');
   const [emailAddresses, setEmailAddresses] = useState<string[]>([]);
-  const [subject, setSubject] = useState('');
+  const [subject, setSubject] = useState(defaultSubject);
   const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
@@ -43,10 +46,23 @@ const Outreach: React.FC<OutreachProps> = ({ defaultText }) => {
     setEmailAddresses(emailAddresses.filter((_, i) => i !== index));
   };
 
-  const handleSend = () => {
-    // Implement send functionality here, using all email addresses and the email body
-    console.log('Sending email to:', emailAddresses);
-    console.log('Email content:', emailBody);
+  const handleSend = async () => {
+    try {
+      const payload = {
+        recipients: emailAddresses,
+        subject: subject,
+        body: emailBody
+      };
+      
+      console.log('Sending email with payload:', payload);
+      // Implement actual API call here
+      
+      // After successful send, remove the component
+      onComplete(templateId);
+      
+    } catch (error) {
+      console.error('Error sending email:', error);
+    }
   };
 
   return (

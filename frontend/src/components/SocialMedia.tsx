@@ -177,6 +177,11 @@ const SocialMedia: React.FC<SocialMediaProps> = ({ eventId }) => {
     );
   }
 
+  // Return null if there are no items
+  if (socialMediaItems.length === 0) {
+    return null;
+  }
+
   return (
     <Card>
       <CardHeader>
