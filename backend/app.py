@@ -8,6 +8,8 @@ from pymongo import MongoClient
 from agents.agents_framework import process_user_message
 from langchain_core.messages import HumanMessage
 from bson import ObjectId
+from datetime import datetime
+
 
 load_dotenv()
 
@@ -101,6 +103,15 @@ def agent():
 
         for response in responses:
             response_str = str(response)
+
+            # Create event entry first if it doesn't exist
+            if not event_id and ("'Social_Outreach'" in response_str or "'Resources'" in response_str):
+                event_id = str(ObjectId())
+                events_collection = client['sanctuary']['events']
+                events_collection.insert_one({
+                    'event_id': event_id,
+                    'created_at': datetime.utcnow()
+                })
 
             # Check if 'Social_Outreach' is mentioned in the response
             if "'Social_Outreach'" in response_str:
