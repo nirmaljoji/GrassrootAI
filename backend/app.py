@@ -100,8 +100,6 @@ def chat():
     return Response(generate(), content_type="text/plain")
 
 
-
-
 @app.route("/resources", methods=["POST"])
 def resources():
     # Make an api call to mongodb and get all the resources and return them
@@ -114,10 +112,12 @@ def resources():
     result = []
     
     for resource in client['sanctuary']['resources'].find({"event_id": event_id}):
-        resource["_id"] = str(resource["_id"])
+        resource["id"] = str(resource["_id"])
+        del resource["_id"]
         result.append(resource)
     
     return Response(json.dumps(result, cls=JSONEncoder), content_type="application/json")
+
 
 @app.route("/social_outreach", methods=["POST"])
 def social_outreach():
@@ -131,7 +131,8 @@ def social_outreach():
     result = []
     
     for resource in client['sanctuary']['social_outreach'].find({"event_id": event_id}):
-        resource["_id"] = str(resource["_id"])
+        resource["id"] = str(resource["_id"])
+        del resource["_id"]
         result.append(resource)
     
     return Response(json.dumps(result, cls=JSONEncoder), content_type="application/json")
@@ -143,7 +144,8 @@ def events():
     result = []
     
     for resource in client['sanctuary']['events'].find({}):
-        resource["_id"] = str(resource["_id"])
+        resource["id"] = str(resource["_id"])
+        del resource["_id"]
         result.append(resource)
     return Response(json.dumps(result, cls=JSONEncoder), content_type="application/json")
 

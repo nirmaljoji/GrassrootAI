@@ -1,40 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import FlipMove from 'react-flip-move';
 
 interface Task {
   id: number;
-  text: string;
-  completed: boolean;
+  resource: string;
+  completed?: boolean;
 }
 
 // Add a props interface for TodoList
 interface TodoListProps {
   listName: string;
+  eventId?: string;
 }
 
-const TodoList: React.FC<TodoListProps> = ({ listName }) => {
-  const [todos, setTodos] = useState<Task[]>([
-    { id: 1, text: 'Buy groceries', completed: false },
-    { id: 2, text: 'Walk the dog1', completed: false },
-    { id: 3, text: 'Walk the dog2', completed: false },
-    { id: 4, text: 'Walk the dog3', completed: false },
-    { id: 5, text: 'Walk the dog4', completed: false },
-    { id: 6, text: 'Walk the dog5', completed: false },
-    { id: 7, text: 'Walk the dog6', completed: false },
-    { id: 8, text: 'Walk the dog7', completed: false },
-    { id: 9, text: 'Walk the dog8', completed: false },
-    { id: 10, text: 'Walk the dog9', completed: false },
-    { id: 11, text: 'Walk the dog10', completed: false },
-    { id: 12, text: 'Read a book', completed: false }
-  ]);
+const TodoList: React.FC<TodoListProps> = ({ listName , eventId}) => {
+  
+  const [todos, setTodos] = useState<Task[]>([]);
+
+  // Fetch todos from the API when the component mounts or listName changes
+  useEffect(() => {
+    const fetchTodos = async () => {
+      try {
+        const response = await fetch('http://localhost:5001/resources', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ eventId: eventId })
+        });
+        const data = await response.json();
+        setTodos(data);
+      } catch (error) {
+        console.error('Failed to fetch todos:', error);
+      }
+    };
+
+    fetchTodos();
+  }, []);
 
   const handleCheckboxChange = (id: number) => {
     setTodos(prevTodos =>
       [...prevTodos]
         .map(task =>
-          task.id === id ? { ...task, completed: !task.completed } : task
+          task.id === id ? { ...task, completed: !!!task.completed } : task
         )
-        .sort((a, b) => Number(a.completed) - Number(b.completed))
     );
   };
 
@@ -50,11 +57,11 @@ const TodoList: React.FC<TodoListProps> = ({ listName }) => {
           >
             <input 
               type="checkbox" 
-              checked={todo.completed} 
+              checked={todo.completed ?? false}  
               onChange={() => handleCheckboxChange(todo.id)}
               className="mr-2"
             />
-            {todo.text}
+            {todo.resource ??  ""}
           </li>
         ))}
       </FlipMove>

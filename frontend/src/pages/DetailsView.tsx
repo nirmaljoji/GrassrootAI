@@ -24,7 +24,7 @@ const DetailsView: React.FC = () => {
         </h2>
         <p>Content for the second column.</p>
         <h1>Event Id = {eventId ?? ""}</h1>
-        <TodoList listName="Resources" />
+        <TodoList listName="Resources" eventId={eventId}/>
         <Permits permits={permits} />
         <SocialMedia />
         <Outreach defaultText="" />
