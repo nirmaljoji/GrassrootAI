@@ -12,8 +12,10 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.prompts import MessagesPlaceholder
 from langchain.output_parsers.openai_functions import JsonOutputFunctionsParser
 from .resource_search_tool import SearchTool
+from .outreach_social_tool import OutreachSocialTool
 # from agent_supervisor import supervisor_node
 resourse_search_tool = SearchTool()
+outreach_social_tool = OutreachSocialTool()
 
 members = ["Resources", "Social_Outreach", "Volunteer_Outreach"]
 # Our team supervisor is an LLM node. It just picks the next agent to process
@@ -23,7 +25,7 @@ llm = ChatOpenAI(model="gpt-3.5-turbo")
 
 resource_prompt = """You are a resource planning expert for social initiatives. 
 
-Make sure to use the following tool: resourse_search_tool
+First make a call to the tool to get the latest information regardin the event: resource_search_tool
 
 When asked about an event:
 1. Identify all required resources across categories: 
@@ -63,6 +65,27 @@ Answer:
 - Mobile clinic permit
 """
 
+
+outreach_social_prompt = """You are a outreach social expert for social initiatives. 
+
+First make a call to the tool to get the information regarding Facebook groupname: outreach_social_tool
+
+Output the group names alone in each line.  Follow the same format as provided in the Examples
+
+Example Q: What resources are needed for a community food distribution event?
+Answer:
+- group_name 1
+- group_name 2
+- group_name 3
+- group_name 4
+
+Example Q: How do i organize a blood donation camp in North Carolina?
+Answer:
+- group_name 1
+- group_name 2
+- group_name 3
+- group_name 4
+"""
 
 system_prompt = (
     "You are a supervisor tasked with managing a conversation between the"
@@ -117,13 +140,11 @@ def outreach_volunteer_node(state: State) -> Command[Literal["Supervisor"]]:
 
 
 outreach_social_agent = create_react_agent(
-    llm, tools=[agent_outreach_social], prompt=""
+    llm, tools=[outreach_social_tool], prompt=outreach_social_prompt
 )
 
 
 def outreach_social_node(state: State) -> Command[Literal["Supervisor"]]:
-    print("HELLO")
-    print(state)
     result = outreach_social_agent.invoke(state)
     return Command(
         update={

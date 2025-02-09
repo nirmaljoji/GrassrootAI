@@ -19,7 +19,8 @@ class SearchTool(BaseTool):
         """Use this tool to search for information using Perplexity AI."""
         enhanced_query = f"{query}\n\nPlease identify all required resources across these categories:\n- Personnel (medical staff, volunteers)\n- Equipment & supplies\n- Permits/licenses\n- Facilities/venue\n- Transportation\n- Safety requirements\n\n"
         
-        print("Using Perplexity")
+        print("Using Perplexity" + query)
+
         perplexity = ChatPerplexity(api_key=os.getenv('PERPLEXITY_API_KEY'), model="sonar-pro")
         response = perplexity.invoke(enhanced_query)
         return response.content
