@@ -36,14 +36,12 @@ Our solution uses AI to streamline the entire process. We leverage a specialized
 |---------------------|-------------------------------------------------------------------------------------------------|
 | Landing             | <img src="https://github.com/user-attachments/assets/f897636e-c395-4645-b5e0-3f5a044f2dbf" width="500"/>  |
 | Chat                | <img src="https://github.com/user-attachments/assets/6912e6d6-44ff-44b4-bd80-49d2d3ab5b81" width="500"/>  |
-| Flow                | <img src="https://github.com/user-attachments/assets/cea8599f-ad07-4850-b4f4-6d73c994bc7c" width="500"/>  |
+| Flow                | <img src="https://github.com/user-attachments/assets/800ea903-51c1-4abc-b047-38590a594143" width="500"/>  |
 | Resources           | <img src="https://github.com/user-attachments/assets/01bf1a4e-8b1f-4cce-97ca-4deceb989b58" width="500"/>  |
 | Volunteer Outreach  | <img src="https://github.com/user-attachments/assets/facde025-d080-42bb-b8e0-f15fd9733efb" width="500"/>  |
 | Social Media        | <img src="https://github.com/user-attachments/assets/63766180-6da1-4c67-94ae-6199ed4c9941" width="500"/>  |
 | Budgeting           | <img src="https://github.com/user-attachments/assets/525145a5-0493-4052-950e-c85b67d0819e" width="500"/>  |
 | Permits             | <img src="https://github.com/user-attachments/assets/a7f110a2-5dc4-4f21-8aa9-166771ac5b4b" width="500"/>  |
-
-
 
 
 
