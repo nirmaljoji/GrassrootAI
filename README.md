@@ -32,7 +32,7 @@ Our solution uses AI to streamline the entire process. We leverage a specialized
 | 🕒 Smart Scheduling     | Automated task timelines & reminders         |
 
 ## 🛠️ How It Works
-### System Architecture
+### AI Agent Architecture
 <img width="769" alt="1" src="https://github.com/user-attachments/assets/63650456-b0ee-481c-9a82-11aa6e935e51" />
 
 ### Tech Stack
