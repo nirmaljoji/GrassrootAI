@@ -10,12 +10,6 @@ Here's a polished GitHub README markdown file with icons, badges, and clean sect
 
 Empowering communities through AI-driven organizing tools. Make social impact accessible to all.
 
-[![Watch the Video](https://img.shields.io/badge/-Demo_Video-red?logo=youtube)](your-video-link)
-[![Try Now](https://img.shields.io/badge/-Try_Online-blueviolet)](your-deployed-link)
-
-<div align="center">
-  <img src="your-screenshot-link.png" width="800" alt="Platform Screenshot">
-</div>
 
 ## ✨ Inspiration
 > "We wanted to create a digital sanctuary where passion meets action - where anyone can become a changemaker."
