@@ -1,6 +1,3 @@
-Here's a polished GitHub README markdown file with icons, badges, and clean sections:
-
-
 # 🌱 Grassroots - Community Action Platform
 
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
